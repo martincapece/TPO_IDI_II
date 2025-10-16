@@ -54,17 +54,6 @@ public class PrismaApplication implements CommandLineRunner {
         System.out.println("\n=== FIN DE VERIFICACIÓN ===\n");
     }
 
-    // Configuración interna de Redis
-    @Configuration
-    public static class RedisConfig {
-        @Bean
-        public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-            RedisTemplate<String, Object> template = new RedisTemplate<>();
-            template.setConnectionFactory(connectionFactory);
-            return template;
-        }
-    }
-
     private void validateMongoDB() {
         System.out.print("MongoDB: ");
         try {

@@ -61,9 +61,21 @@ public class ContentController {
     }
 
     // Obtener contenidos populares (desde caché Redis)
-    @GetMapping("/populares")
-    public ResponseEntity<List<Content>> getPopularContents() {
-        return ResponseEntity.ok(contentService.getPopularContents());
+    @GetMapping("/liked")
+    public ResponseEntity<List<Content>> getLikedContents() {
+        return ResponseEntity.ok(contentService.getLikedContents());
+    }
+
+    // Obtener contenidos más vistos (desde caché Redis)
+    @GetMapping("/vistos")
+    public ResponseEntity<List<Content>> getViewsContents() {
+        return ResponseEntity.ok(contentService.getViewsContents());
+    }
+
+    //Obtener contenidos más vistos por región (desde caché Redis)
+    @GetMapping("/vistos/{region}")
+    public ResponseEntity<List<Content>> getTopContentsByRegion(@PathVariable String region) {
+        return ResponseEntity.ok(contentService.getTopContentsByRegion(region));
     }
 
     // Incrementar "me gusta"
@@ -73,7 +85,12 @@ public class ContentController {
         return ResponseEntity.ok().build();
     }
 
-    // Actualizar estadísticas regionales
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Void> incrementViews(@PathVariable String id) {
+        contentService.incrementViews(id);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/{id}/stats/{region}")
     public ResponseEntity<Void> updateRegionalStats(
             @PathVariable String id, 
@@ -83,7 +100,6 @@ public class ContentController {
         return ResponseEntity.ok().build();
     }
 
-    // Actualizar contenido
     @PutMapping("/{id}")
     public ResponseEntity<Content> updateContent(@PathVariable String id, @RequestBody Content content) {
         return contentService.updateContent(id, content)
@@ -91,7 +107,6 @@ public class ContentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Eliminar contenido
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContent(@PathVariable String id) {
         boolean deleted = contentService.deleteContent(id);

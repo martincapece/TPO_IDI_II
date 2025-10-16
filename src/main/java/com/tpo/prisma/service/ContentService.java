@@ -3,6 +3,10 @@ package com.tpo.prisma.service;
 import com.tpo.prisma.model.Content;
 import com.tpo.prisma.repository.ContentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -16,108 +20,95 @@ public class ContentService {
     @Autowired
     private ContentRepository contentRepository;
 
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
-    private static final String CACHE_KEY_PREFIX = "content:";
-    private static final String POPULAR_CACHE_KEY = "content:popular";
-    private static final long CACHE_TTL = 10; // 10 minutos
+    private static final String LIKED_CACHE_KEY = "content:liked";
+    private static final String VIEWS_CACHE_KEY = "content:views";
+    private static final String REGIONAL_RANKING_PREFIX = "content:regional:";
+    private static final long CACHE_TTL = 10;
 
-    // Crear contenido
     public Content createContent(Content content) {
         content.setPublishedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
         Content saved = contentRepository.save(content);
         
-        // Invalidar caché de contenidos populares
         if (redisTemplate != null) {
-            redisTemplate.delete(POPULAR_CACHE_KEY);
+            redisTemplate.delete(LIKED_CACHE_KEY);
+            redisTemplate.delete(VIEWS_CACHE_KEY);
+            redisTemplate.delete(REGIONAL_RANKING_PREFIX + content.getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
         }
         
         return saved;
     }
 
-    // Obtener contenido por ID (con caché)
     public Optional<Content> getContentById(String id) {
-        if (redisTemplate != null) {
-            String cacheKey = CACHE_KEY_PREFIX + id;
-            
-            // Intentar obtener de Redis
-            Content cached = (Content) redisTemplate.opsForValue().get(cacheKey);
-            if (cached != null) {
-                System.out.println("✅ Contenido obtenido desde REDIS (caché)");
-                return Optional.of(cached);
-            }
-            
-            // Si no está en caché, buscar en MongoDB
-            Optional<Content> content = contentRepository.findById(id);
-            
-            // Si existe, guardarlo en Redis
-            content.ifPresent(c -> {
-                redisTemplate.opsForValue().set(cacheKey, c, CACHE_TTL, TimeUnit.MINUTES);
-                System.out.println("✅ Contenido guardado en REDIS (caché)");
-            });
-            
-            return content;
-        }
-        
-        // Si Redis no está disponible, solo buscar en MongoDB
         return contentRepository.findById(id);
     }
 
-    // Obtener todos los contenidos
     public List<Content> getAllContents() {
         return contentRepository.findAll();
     }
 
-    // Obtener contenidos por categoría
     public List<Content> getContentsByCategoria(List<String> categorias) {
         return contentRepository.findByCategoria(categorias);
     }
 
-    // Obtener contenidos por creador
     public List<Content> getContentsByCreator(String creatorId) {
         return contentRepository.findByCreatorId(creatorId);
     }
 
-    // Obtener contenidos por tipo
     public List<Content> getContentsByTipo(String tipo) {
         return contentRepository.findByTipo(tipo);
     }
 
-    // Obtener contenidos públicos
     public List<Content> getPublicContents() {
         return contentRepository.findByVisibilidad("publico");
     }
 
-    // Obtener contenidos populares (con caché)
     @SuppressWarnings("unchecked")
-    public List<Content> getPopularContents() {
+    public List<Content> getLikedContents() {
         if (redisTemplate != null) {
-            // Intentar obtener de Redis
-            List<Content> cached = (List<Content>) redisTemplate.opsForValue().get(POPULAR_CACHE_KEY);
+            List<Content> cached = (List<Content>) redisTemplate.opsForValue().get(LIKED_CACHE_KEY);
             if (cached != null && !cached.isEmpty()) {
-                System.out.println("✅ Contenidos populares obtenidos desde REDIS (caché)");
                 return cached;
             }
             
-            // Si no está en caché, buscar en MongoDB
-            List<Content> popular = contentRepository.findTopByOrderByCant_meGustaDesc();
+            List<Content> liked = contentRepository.findTopByOrderByCantMeGustaDesc();
             
-            // Guardar en Redis
-            if (!popular.isEmpty()) {
-                redisTemplate.opsForValue().set(POPULAR_CACHE_KEY, popular, CACHE_TTL, TimeUnit.MINUTES);
-                System.out.println("✅ Contenidos populares guardados en REDIS (caché)");
+            if (!liked.isEmpty()) {
+                redisTemplate.opsForValue().set(LIKED_CACHE_KEY, liked, CACHE_TTL, TimeUnit.MINUTES);
             }
             
-            return popular;
+            return liked;
         }
         
-        // Si Redis no está disponible, solo buscar en MongoDB
-        return contentRepository.findTopByOrderByCant_meGustaDesc();
+        return contentRepository.findTopByOrderByCantMeGustaDesc();
     }
 
-    // Incrementar "me gusta" (actualizar MongoDB e invalidar caché)
+    @SuppressWarnings("unchecked")
+    public List<Content> getViewsContents() {
+        if (redisTemplate != null) {
+            List<Content> cached = (List<Content>) redisTemplate.opsForValue().get(VIEWS_CACHE_KEY);
+            if (cached != null && !cached.isEmpty()) {
+                return cached;
+            }
+
+            List<Content> views = contentRepository.findTopByOrderByCantVistasDesc();
+            if (!views.isEmpty()) {
+                redisTemplate.opsForValue().set(VIEWS_CACHE_KEY, views, CACHE_TTL, TimeUnit.MINUTES);
+            }
+            
+            return views;
+        }
+        
+        return contentRepository.findTopByOrderByCantVistasDesc();
+    }
+
     public void incrementLikes(String contentId) {
         Optional<Content> contentOpt = contentRepository.findById(contentId);
         contentOpt.ifPresent(content -> {
@@ -125,35 +116,72 @@ public class ContentService {
             content.setUpdatedAt(LocalDateTime.now());
             contentRepository.save(content);
             
-            // Invalidar caché
             if (redisTemplate != null) {
-                redisTemplate.delete(CACHE_KEY_PREFIX + contentId);
-                redisTemplate.delete(POPULAR_CACHE_KEY);
+                redisTemplate.delete(LIKED_CACHE_KEY);  
             }
         });
     }
 
-    // Actualizar estadísticas regionales
+    public void incrementViews(String contentId) {
+        Optional<Content> contentOpt = contentRepository.findById(contentId);
+        contentOpt.ifPresent(content -> {
+            content.setCantVistas(content.getCantVistas() + 1);
+            content.setUpdatedAt(LocalDateTime.now());
+            contentRepository.save(content);
+        });
+
+        if (redisTemplate != null) {
+            redisTemplate.delete(VIEWS_CACHE_KEY);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Content> getTopContentsByRegion(String region) {
+        String cacheKey = REGIONAL_RANKING_PREFIX + region.toLowerCase();
+        
+        if (redisTemplate != null) {
+            List<Content> cached = (List<Content>) redisTemplate.opsForValue().get(cacheKey);
+            if (cached != null && !cached.isEmpty()) {
+                return cached;
+            }
+        }
+        
+        Query query = new Query();
+        String fieldPath = "estadisticasRegionales." + region;
+        
+        query.addCriteria(Criteria.where(fieldPath).exists(true).gte(1));
+        
+        query.with(Sort.by(Sort.Direction.DESC, fieldPath));
+        
+        query.limit(20);
+        
+        List<Content> topContents = mongoTemplate.find(query, Content.class);
+        
+        if (redisTemplate != null && !topContents.isEmpty()) {
+            redisTemplate.opsForValue().set(cacheKey, topContents, CACHE_TTL, TimeUnit.MINUTES);
+        }
+        
+        return topContents;
+    }
+
     public void updateRegionalStats(String contentId, String region, Integer views) {
         Optional<Content> contentOpt = contentRepository.findById(contentId);
         contentOpt.ifPresent(content -> {
-            // 🔧 CAMBIO: Corregir el nombre del método getter
-            var stats = content.getEstadisticas_regionales(); // Antes: getEstadisitcas_regionales()
+            var stats = content.getEstadisticasRegionales();
             if (stats != null) {
                 stats.put(region, stats.getOrDefault(region, 0) + views);
-                content.setEstadisticas_regionales(stats);
+                content.setEstadisticasRegionales(stats);
                 content.setUpdatedAt(LocalDateTime.now());
                 contentRepository.save(content);
                 
-                // Invalidar caché
                 if (redisTemplate != null) {
-                    redisTemplate.delete(CACHE_KEY_PREFIX + contentId);
+                    String cacheKey = REGIONAL_RANKING_PREFIX + region.toLowerCase();
+                    redisTemplate.delete(cacheKey);
                 }
             }
         });
     }
 
-    // Actualizar contenido
     public Optional<Content> updateContent(String id, Content updatedContent) {
         return contentRepository.findById(id).map(content -> {
             content.setTitulo(updatedContent.getTitulo());
@@ -166,25 +194,18 @@ public class ContentService {
             
             Content saved = contentRepository.save(content);
             
-            // Invalidar caché
-            if (redisTemplate != null) {
-                redisTemplate.delete(CACHE_KEY_PREFIX + id);
-                redisTemplate.delete(POPULAR_CACHE_KEY);
-            }
-            
             return saved;
         });
     }
 
-    // Eliminar contenido
     public boolean deleteContent(String id) {
         if (contentRepository.existsById(id)) {
             contentRepository.deleteById(id);
             
-            // Invalidar caché
             if (redisTemplate != null) {
-                redisTemplate.delete(CACHE_KEY_PREFIX + id);
-                redisTemplate.delete(POPULAR_CACHE_KEY);
+                redisTemplate.delete(LIKED_CACHE_KEY);
+                redisTemplate.delete(VIEWS_CACHE_KEY);
+                redisTemplate.delete(REGIONAL_RANKING_PREFIX + contentRepository.findById(id).get().getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
             }
             
             return true;

@@ -10,34 +10,31 @@ import java.util.Map;
 public class Content {
     
     @Id
-    private String id; // MongoDB _id
+    private String id;
     
-    private String tipo; // "video", "audio", "image", "text"
+    private String tipo;
     private String titulo;
-    private String lenguaje; // "español", "inglés", etc.
-    private List<String> categoria; // Array de categorías: ["futbol", "IRL"]
-    private String visibilidad; // "publico", "privado", "seguidores"
-    private Integer duracion; // Duración en segundos (para videos/audios)
+    private String lenguaje;
+    private List<String> categoria;
+    private String visibilidad;
+    private Integer duracion;
     
-    // Estadísticas regionales
-    private Map<String, Integer> estadisticas_regionales; // {"Argentina": 521, "Brasil": 50, ...}
+    private Map<String, Integer> estadisticasRegionales;
     
-    private String creatorId; // ID del creador (referencia a User en MongoDB)
-    private Integer cantMeGusta; // Cantidad de "me gusta"
-    
-    // Timestamps
+    private String creatorId;
+    private Integer cantMeGusta;
+    private Integer cantVistas;
     private LocalDateTime publishedAt;
     private LocalDateTime updatedAt;
 
-    // Constructor por defecto
     public Content() {
         this.publishedAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.cantMeGusta = 0;
+        this.cantVistas = 0;
         this.duracion = 0;
     }
 
-    // Getters y Setters
     public String getId() {
         return id;
     }
@@ -94,12 +91,12 @@ public class Content {
         this.duracion = duracion;
     }
 
-    public Map<String, Integer> getEstadisticas_regionales() {
-        return estadisticas_regionales;
+    public Map<String, Integer> getEstadisticasRegionales() {
+        return estadisticasRegionales;
     }
 
-    public void setEstadisticas_regionales(Map<String, Integer> estadisticas_regionales) {
-        this.estadisticas_regionales = estadisticas_regionales;
+    public void setEstadisticasRegionales(Map<String, Integer> estadisticasRegionales) {
+        this.estadisticasRegionales = estadisticasRegionales;
     }
 
     public String getCreatorId() {
@@ -116,6 +113,14 @@ public class Content {
 
     public void setCantMeGusta(Integer cantMeGusta) {
         this.cantMeGusta = cantMeGusta;
+    }
+
+    public Integer getCantVistas() {
+        return cantVistas;
+    }
+
+    public void setCantVistas(Integer cantVistas) {
+        this.cantVistas = cantVistas;
     }
 
     public LocalDateTime getPublishedAt() {
