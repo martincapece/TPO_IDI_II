@@ -122,19 +122,6 @@ public class ContentService {
         });
     }
 
-    public void incrementViews(String contentId) {
-        Optional<Content> contentOpt = contentRepository.findById(contentId);
-        contentOpt.ifPresent(content -> {
-            content.setCantVistas(content.getCantVistas() + 1);
-            content.setUpdatedAt(LocalDateTime.now());
-            contentRepository.save(content);
-        });
-
-        if (redisTemplate != null) {
-            redisTemplate.delete(VIEWS_CACHE_KEY);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public List<Content> getTopContentsByRegion(String region) {
         String cacheKey = REGIONAL_RANKING_PREFIX + region.toLowerCase();

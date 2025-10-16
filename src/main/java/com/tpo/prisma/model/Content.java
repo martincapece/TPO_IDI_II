@@ -31,7 +31,6 @@ public class Content {
         this.publishedAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.cantMeGusta = 0;
-        this.cantVistas = 0;
         this.duracion = 0;
     }
 
@@ -116,11 +115,12 @@ public class Content {
     }
 
     public Integer getCantVistas() {
-        return cantVistas;
-    }
-
-    public void setCantVistas(Integer cantVistas) {
-        this.cantVistas = cantVistas;
+        if (estadisticasRegionales == null || estadisticasRegionales.isEmpty()) {
+            return 0;
+        }
+        return estadisticasRegionales.values().stream()
+                .mapToInt(Integer::intValue)
+                .sum();
     }
 
     public LocalDateTime getPublishedAt() {

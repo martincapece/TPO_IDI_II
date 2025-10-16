@@ -86,8 +86,8 @@ public class ContentController {
     }
 
     @PostMapping("/{id}/view")
-    public ResponseEntity<Void> incrementViews(@PathVariable String id) {
-        contentService.incrementViews(id);
+    public ResponseEntity<Void> incrementViews(@PathVariable String id, @RequestParam String region) {
+        contentService.updateRegionalStats(id, region, 1);
         return ResponseEntity.ok().build();
     }
 
