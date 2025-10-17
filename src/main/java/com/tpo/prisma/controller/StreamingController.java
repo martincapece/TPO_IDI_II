@@ -81,12 +81,6 @@ public class StreamingController {
         return ResponseEntity.ok(streamingService.getStreamingsByCreator(creatorId));
     }
 
-    @GetMapping("/categoria")
-    public ResponseEntity<List<Streaming>> getStreamingsByCategoria(
-            @RequestParam List<String> categorias) {
-        return ResponseEntity.ok(streamingService.getStreamingsByCategoria(categorias));
-    }
-
     @GetMapping("/live/categoria")
     public ResponseEntity<List<Streaming>> getStreamingsEnVivoPorCategoria(
             @RequestParam List<String> categorias) {
@@ -94,18 +88,13 @@ public class StreamingController {
     }
 
     @GetMapping("/region/{region}")
-    public ResponseEntity<List<Streaming>> getStreamingsByRegion(@PathVariable String region) {
-        return ResponseEntity.ok(streamingService.getStreamingsByRegion(region));
+    public ResponseEntity<List<Streaming>> getStreamingsenVivoByRegion(@PathVariable String region) {
+        return ResponseEntity.ok(streamingService.getStreamingsenVivoByRegion(region));
     }
     
     @GetMapping("/top/live")
     public ResponseEntity<List<Streaming>> getTopLiveByEspectadores() {
         return ResponseEntity.ok(streamingService.getTopLiveByEspectadores());
-    }
-
-    @GetMapping("/top/pico")
-    public ResponseEntity<List<Streaming>> getTopByPicoEspectadores() {
-        return ResponseEntity.ok(streamingService.getTopByPicoEspectadores());
     }
 
     @GetMapping("/top/region/{region}")

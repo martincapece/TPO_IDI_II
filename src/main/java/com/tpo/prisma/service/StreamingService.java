@@ -175,16 +175,12 @@ public class StreamingService {
         return streamingRepository.findByCreatorId(creatorId);
     }
     
-    public List<Streaming> getStreamingsByCategoria(List<String> categorias) {
-        return streamingRepository.findByCategoria(categorias);
-    }
-    
     public List<Streaming> getStreamingsEnVivoPorCategoria(List<String> categorias) {
         return streamingRepository.findLiveByCategoria(categorias);
     }
     
-    public List<Streaming> getStreamingsByRegion(String region) {
-        return streamingRepository.findByRegion(region);
+    public List<Streaming> getStreamingsenVivoByRegion(String region) {
+        return streamingRepository.findLiveByRegion(region);
     }
     
     
@@ -206,10 +202,6 @@ public class StreamingService {
         }
         
         return streamingRepository.findTopLiveByEspectadores();
-    }
-    
-    public List<Streaming> getTopByPicoEspectadores() {
-        return streamingRepository.findTopByPicoEspectadores();
     }
     
     @SuppressWarnings("unchecked")

@@ -15,19 +15,13 @@ public interface StreamingRepository extends MongoRepository<Streaming, String> 
     @Query("{ 'enVivo': true }")
     List<Streaming> findByEnVivo();
     
-    @Query("{ 'categoria': { $in: ?0 } }")
-    List<Streaming> findByCategoria(List<String> categorias);
-    
-    @Query("{ 'region': ?0 }")
-    List<Streaming> findByRegion(String region);
+    @Query("{ 'enVivo': true, 'region': ?0 }")
+    List<Streaming> findLiveByRegion(String region);
     
     @Query("{ 'enVivo': true, 'categoria': { $in: ?0 } }")
     List<Streaming> findLiveByCategoria(List<String> categorias);
     
     @Query(value = "{ 'enVivo': true }", sort = "{ 'estadisticasVivo.espectadores': -1 }")
     List<Streaming> findTopLiveByEspectadores();
-    
-    @Query(value = "{}", sort = "{ 'estadisticasVivo.picoEspectadores': -1 }")
-    List<Streaming> findTopByPicoEspectadores();
     
 }
