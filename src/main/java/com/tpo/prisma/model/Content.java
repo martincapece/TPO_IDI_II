@@ -23,7 +23,6 @@ public class Content {
     
     private String creatorId;
     private Integer cantMeGusta;
-    private Integer cantVistas;
     private LocalDateTime publishedAt;
     private LocalDateTime updatedAt;
 
