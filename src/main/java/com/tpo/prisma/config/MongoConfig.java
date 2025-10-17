@@ -31,7 +31,6 @@ public class MongoConfig {
             public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
                 if (bean instanceof MappingMongoConverter) {
                     MappingMongoConverter converter = (MappingMongoConverter) bean;
-                    // ✅ Elimina el campo "_class"
                     converter.setTypeMapper(new DefaultMongoTypeMapper(null));
                 }
                 return bean;
@@ -39,7 +38,6 @@ public class MongoConfig {
         };
     }
 
-    // Conversor de BsonTimestamp a Date
     public static class BsonTimestampToDateConverter implements Converter<BsonTimestamp, Date> {
         @Override
         public Date convert(BsonTimestamp source) {
