@@ -12,16 +12,18 @@ public interface StreamingRepository extends MongoRepository<Streaming, String> 
     @Query("{ 'creatorId': ?0 }")
     List<Streaming> findByCreatorId(String creatorId);
     
-    @Query("{ 'enVivo': true }")
+    @Query("{ 'enVivo': true, 'horaFinalizado': null }")
     List<Streaming> findByEnVivo();
     
     @Query("{ 'enVivo': true, 'region': ?0 }")
     List<Streaming> findLiveByRegion(String region);
     
     @Query("{ 'enVivo': true, 'categoria': { $in: ?0 } }")
-    List<Streaming> findLiveByCategoria(List<String> categorias);
+    List<Streaming> findLiveByCategorias(List<String> categorias);
     
     @Query(value = "{ 'enVivo': true }", sort = "{ 'estadisticasVivo.espectadores': -1 }")
     List<Streaming> findTopLiveByEspectadores();
     
+    @Query(value = "{ 'enVivo': true, 'region': ?0 }", sort = "{ 'estadisticasVivo.espectadores': -1 }")
+    List<Streaming> findTopLiveByEspectadoresByRegion(String region);
 }

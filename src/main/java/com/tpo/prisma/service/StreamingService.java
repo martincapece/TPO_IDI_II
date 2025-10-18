@@ -176,7 +176,7 @@ public class StreamingService {
     }
     
     public List<Streaming> getStreamingsEnVivoPorCategoria(List<String> categorias) {
-        return streamingRepository.findLiveByCategoria(categorias);
+        return streamingRepository.findLiveByCategorias(categorias);
     }
     
     public List<Streaming> getStreamingsenVivoByRegion(String region) {
@@ -215,20 +215,14 @@ public class StreamingService {
             }
         }
         
-        Query query = new Query();
-        String fieldPath = "estadisticasRegionales." + region;
-        
-        query.addCriteria(Criteria.where(fieldPath).exists(true).gte(1));
-        query.with(Sort.by(Sort.Direction.DESC, fieldPath));
-        query.limit(20);
-        
-        List<Streaming> topStreamings = mongoTemplate.find(query, Streaming.class);
-        
-        if (redisTemplate != null && !topStreamings.isEmpty()) {
-            redisTemplate.opsForValue().set(cacheKey, topStreamings, RANKING_CACHE_TTL, TimeUnit.MINUTES);
+        List <Streaming> top = streamingRepository.findTopLiveByEspectadoresByRegion(region);
+            
+        if (redisTemplate != null && !top.isEmpty()) {
+            redisTemplate.opsForValue().set(cacheKey, top, CACHE_TTL, TimeUnit.MINUTES);
         }
         
-        return topStreamings;
+        return top;
+
     }
     
     
