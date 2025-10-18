@@ -22,6 +22,9 @@ public class StreamingService {
     
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private DonacionService donacionService;
     
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
@@ -42,6 +45,8 @@ public class StreamingService {
         }
         
         Streaming saved = streamingRepository.save(streaming);
+
+        donacionService.sincronizarStreaming(saved.getId(), saved.getCreatorId());
         
         if (redisTemplate != null) {
             redisTemplate.delete(LIVE_CACHE_KEY);
@@ -99,6 +104,8 @@ public class StreamingService {
             streaming.setHoraFinalizado(LocalDateTime.now());
             
             Streaming saved = streamingRepository.save(streaming);
+
+            donacionService.finalizarStreaming(id);
             
             if (redisTemplate != null) {
                 redisTemplate.delete(LIVE_CACHE_KEY);
