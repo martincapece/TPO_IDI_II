@@ -1,0 +1,117 @@
+package com.tpo.prisma.controller;
+
+import com.tpo.prisma.model.modelNeo4j.ContenidoNode;
+import com.tpo.prisma.service.GrafoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/grafo")
+public class GrafoController {
+
+    @Autowired
+    private GrafoService grafoService;
+
+    // Sincronización mínima
+    @PostMapping("/sincronizar/usuario/{id}")
+    public ResponseEntity<Map<String, String>> syncUsuario(@PathVariable String id) {
+        grafoService.syncUsuario(id);
+        return ResponseEntity.ok(Map.of("message", "Usuario sincronizado"));
+    }
+
+    @PostMapping("/sincronizar/contenido/{id}")
+    public ResponseEntity<Map<String, String>> syncContenido(@PathVariable String id) {
+        grafoService.syncContenido(id);
+        return ResponseEntity.ok(Map.of("message", "Contenido sincronizado"));
+    }
+
+    // 1) SIGUE
+    @PostMapping("/sigue")
+    public ResponseEntity<Map<String, String>> seguir(@RequestParam String origen, @RequestParam String destino) {
+        grafoService.seguir(origen, destino);
+        return ResponseEntity.ok(Map.of("message", "Relación SIGUE creada"));
+    }
+
+    @DeleteMapping("/sigue")
+    public ResponseEntity<Map<String, String>> dejarDeSeguir(@RequestParam String origen, @RequestParam String destino) {
+        grafoService.dejarDeSeguir(origen, destino);
+        return ResponseEntity.ok(Map.of("message", "Relación SIGUE eliminada"));
+    }
+
+    // 2) INTERESADO_EN
+    @PostMapping("/interes")
+    public ResponseEntity<Map<String, String>> interes(@RequestParam String usuarioId, @RequestParam String categoria, @RequestParam(defaultValue = "1") int score) {
+        grafoService.interesadoEn(usuarioId, categoria, score);
+        return ResponseEntity.ok(Map.of("message", "Interés registrado"));
+    }
+
+    @PatchMapping("/interes/ajustar")
+    public ResponseEntity<Map<String, String>> ajustarInteres(@RequestParam String usuarioId, @RequestParam String categoria, @RequestParam int delta) {
+        grafoService.ajustarInteres(usuarioId, categoria, delta);
+        return ResponseEntity.ok(Map.of("message", "Interés ajustado"));
+    }
+
+    @DeleteMapping("/interes")
+    public ResponseEntity<Map<String, String>> eliminarInteres(@RequestParam String usuarioId, @RequestParam String categoria) {
+        grafoService.eliminarInteres(usuarioId, categoria);
+        return ResponseEntity.ok(Map.of("message", "Interés eliminado"));
+    }
+
+    // 3) VIO
+    @PostMapping("/vio")
+    public ResponseEntity<Map<String, String>> vio(@RequestParam String usuarioId, @RequestParam String contenidoId, @RequestParam(defaultValue = "1") int secciones) {
+        grafoService.vio(usuarioId, contenidoId, secciones);
+        return ResponseEntity.ok(Map.of("message", "Vista registrada"));
+    }
+
+    // 4) LE_GUSTO
+    @PostMapping("/me-gusto")
+    public ResponseEntity<Map<String, String>> meGusto(@RequestParam String usuarioId, @RequestParam String contenidoId) {
+        grafoService.meGusto(usuarioId, contenidoId);
+        return ResponseEntity.ok(Map.of("message", "Me gusta registrado"));
+    }
+
+    @DeleteMapping("/me-gusto")
+    public ResponseEntity<Map<String, String>> quitarMeGusto(@RequestParam String usuarioId, @RequestParam String contenidoId) {
+        grafoService.quitarMeGusta(usuarioId, contenidoId);
+        return ResponseEntity.ok(Map.of("message", "Me gusta eliminado"));
+    }
+
+    // 5) EN_CATEGORIA
+    @PostMapping("/en-categoria")
+    public ResponseEntity<Map<String, String>> enCategoria(@RequestParam String contenidoId, @RequestParam String categoria) {
+        grafoService.enCategoria(contenidoId, categoria);
+        return ResponseEntity.ok(Map.of("message", "Categoría asignada"));
+    }
+
+    // 6) TIENE_TAG
+    @PostMapping("/tiene-tag")
+    public ResponseEntity<Map<String, String>> tieneTag(@RequestParam String contenidoId, @RequestParam String tag) {
+        grafoService.tieneTag(contenidoId, tag);
+        return ResponseEntity.ok(Map.of("message", "Tag asignado"));
+    }
+
+    // Recomendaciones
+    @GetMapping("/recomendar/{usuarioId}")
+    public ResponseEntity<Map<String, Object>> recomendar(@PathVariable String usuarioId, @RequestParam(defaultValue = "10") int limite) {
+        List<ContenidoNode> lista = grafoService.recomendarPorIntereses(usuarioId, limite);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("message", "Recomendaciones generadas");
+        resp.put("data", lista);
+        return ResponseEntity.ok(resp);
+    }
+
+    @GetMapping("/relacionado/{contenidoId}")
+    public ResponseEntity<Map<String, Object>> relacionado(@PathVariable String contenidoId, @RequestParam(defaultValue = "5") int limite) {
+        List<ContenidoNode> lista = grafoService.relacionadoPorCoVistas(contenidoId, limite);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("message", "Contenido relacionado");
+        resp.put("data", lista);
+        return ResponseEntity.ok(resp);
+    }
+}
