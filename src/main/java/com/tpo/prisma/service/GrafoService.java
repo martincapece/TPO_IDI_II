@@ -48,11 +48,6 @@ public class GrafoService {
     @Transactional("neo4jTransactionManager")
     public void enCategoria(String contenidoId, String categoria) { grafoRepository.asignarCategoria(contenidoId, categoria); }
 
-    // 6) TIENE_TAG
-    @Transactional("neo4jTransactionManager")
-    public void tieneTag(String contenidoId, String tag) { grafoRepository.asignarTag(contenidoId, tag); }
-
     // Recomendaciones
     public List<ContenidoNode> recomendarPorIntereses(String usuarioId, int limite) { return grafoRepository.recomendarPorIntereses(usuarioId, limite); }
-    public List<ContenidoNode> relacionadoPorCoVistas(String contenidoId, int limite) { return grafoRepository.relacionadoPorCoVistas(contenidoId, limite); }
 }

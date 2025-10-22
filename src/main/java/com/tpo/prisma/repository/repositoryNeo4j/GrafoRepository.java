@@ -48,10 +48,6 @@ public interface GrafoRepository extends Neo4jRepository<UsuarioNode, String> {
     @Query("MATCH (c:Contenido {id:$contenidoId}) MERGE (cat:Categoria {nombre:$categoria}) MERGE (c)-[:EN_CATEGORIA]->(cat)")
     void asignarCategoria(@Param("contenidoId") String contenidoId, @Param("categoria") String categoria);
 
-    // 6) TIENE_TAG: Contenido -> Tag
-    @Query("MATCH (c:Contenido {id:$contenidoId}) MERGE (t:Tag {nombre:$tag}) MERGE (c)-[:TIENE_TAG]->(t)")
-    void asignarTag(@Param("contenidoId") String contenidoId, @Param("tag") String tag);
-
     // Sincronización de nodos mínimos
     @Query("MERGE (:Usuario {id:$id})")
     void mergeUsuario(@Param("id") String id);
@@ -61,10 +57,6 @@ public interface GrafoRepository extends Neo4jRepository<UsuarioNode, String> {
 
     // Consultas para recomendaciones
     // Por intereses del usuario (excluye vistos)
-    @Query("MATCH (u:Usuario {id:$usuarioId})-[:INTERESADO_EN]->(cat:Categoria)<-[:EN_CATEGORIA]-(c:Contenido) WHERE NOT (u)-[:VIO]->(c) RETURN c LIMIT $limite")
+    @Query("MATCH (u:Usuario {id:$usuarioId})-[:INTERESADO_EN]->(cat:Categoria)<-[:EN_CATEGORIA]-(c:Contenido) WHERE NOT (u)-[:VIO]->(c) RETURN DISTINCT c.id AS id LIMIT $limite")
     List<ContenidoNode> recomendarPorIntereses(@Param("usuarioId") String usuarioId, @Param("limite") int limite);
-
-    // Contenido relacionado por co-visualización
-    @Query("MATCH (c1:Contenido {id:$contenidoId})<-[:VIO]-(u:Usuario)-[:VIO]->(c2:Contenido) WHERE c1 <> c2 WITH c2, COUNT(DISTINCT u) AS score RETURN c2 ORDER BY score DESC LIMIT $limite")
-    List<ContenidoNode> relacionadoPorCoVistas(@Param("contenidoId") String contenidoId, @Param("limite") int limite);
 }

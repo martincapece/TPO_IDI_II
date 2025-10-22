@@ -5,6 +5,7 @@ import com.tpo.prisma.dto.LoginRequest;
 import com.tpo.prisma.dto.RegisterRequest;
 import com.tpo.prisma.model.Usuario;
 import com.tpo.prisma.repository.UserRepository;
+import com.tpo.prisma.service.GrafoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class AuthService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private GrafoService grafoService;
     
     /**
      * Registrar un nuevo usuario
@@ -57,6 +61,24 @@ public class AuthService {
         usuario.setHistorial(new ArrayList<>());
         // Guardar en MongoDB
         Usuario savedUser = userRepository.save(usuario);
+        
+        // Sincronizar automáticamente con Neo4j
+        try {
+            // 1. Crear nodo Usuario en Neo4j
+            grafoService.syncUsuario(savedUser.getId());
+            
+            // 2. Crear relaciones INTERESADO_EN para cada interés
+            if (savedUser.getIntereses() != null && !savedUser.getIntereses().isEmpty()) {
+                for (String interes : savedUser.getIntereses()) {
+                    // Score inicial de 1 para cada interés declarado
+                    grafoService.interesadoEn(savedUser.getId(), interes, 1);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[Neo4j] Error sincronizando usuario: " + e.getMessage());
+            // No fallar el registro si falla Neo4j
+        }
+        
         return new AuthResponse(
             "Usuario registrado exitosamente",
             savedUser.getId(),

@@ -89,28 +89,12 @@ public class GrafoController {
         return ResponseEntity.ok(Map.of("message", "Categoría asignada"));
     }
 
-    // 6) TIENE_TAG
-    @PostMapping("/tiene-tag")
-    public ResponseEntity<Map<String, String>> tieneTag(@RequestParam String contenidoId, @RequestParam String tag) {
-        grafoService.tieneTag(contenidoId, tag);
-        return ResponseEntity.ok(Map.of("message", "Tag asignado"));
-    }
-
     // Recomendaciones
     @GetMapping("/recomendar/{usuarioId}")
     public ResponseEntity<Map<String, Object>> recomendar(@PathVariable String usuarioId, @RequestParam(defaultValue = "10") int limite) {
         List<ContenidoNode> lista = grafoService.recomendarPorIntereses(usuarioId, limite);
         Map<String, Object> resp = new HashMap<>();
         resp.put("message", "Recomendaciones generadas");
-        resp.put("data", lista);
-        return ResponseEntity.ok(resp);
-    }
-
-    @GetMapping("/relacionado/{contenidoId}")
-    public ResponseEntity<Map<String, Object>> relacionado(@PathVariable String contenidoId, @RequestParam(defaultValue = "5") int limite) {
-        List<ContenidoNode> lista = grafoService.relacionadoPorCoVistas(contenidoId, limite);
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("message", "Contenido relacionado");
         resp.put("data", lista);
         return ResponseEntity.ok(resp);
     }

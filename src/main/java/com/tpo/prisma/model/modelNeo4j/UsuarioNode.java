@@ -2,10 +2,12 @@ package com.tpo.prisma.model.modelNeo4j;
 
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Property;
 
 @Node("Usuario")
 public class UsuarioNode {
     @Id
+    @Property("id")
     private String id; // mismo id que en MongoDB
 
     public UsuarioNode() {}

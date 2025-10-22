@@ -2,6 +2,7 @@ package com.tpo.prisma.service;
 
 import com.tpo.prisma.model.Content;
 import com.tpo.prisma.repository.ContentRepository;
+import com.tpo.prisma.service.GrafoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -27,6 +28,9 @@ public class ContentService {
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private GrafoService grafoService;
+
     private static final String LIKED_CACHE_KEY = "content:liked";
     private static final String VIEWS_CACHE_KEY = "content:views";
     private static final String REGIONAL_RANKING_PREFIX = "content:regional:";
@@ -36,11 +40,31 @@ public class ContentService {
         content.setPublishedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
         Content saved = contentRepository.save(content);
+
+        // Sincronizar automáticamente con Neo4j
+        try {
+            // 1. Crear nodo Contenido en Neo4j
+            grafoService.syncContenido(saved.getId());
+            
+            // 2. Crear relaciones EN_CATEGORIA para cada categoría
+            if (saved.getCategoria() != null && !saved.getCategoria().isEmpty()) {
+                for (String categoria : saved.getCategoria()) {
+                    if (categoria != null && !categoria.trim().isEmpty()) {
+                        grafoService.enCategoria(saved.getId(), categoria.trim());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[Neo4j] Error sincronizando contenido: " + e.getMessage());
+            // No fallar la creación si falla Neo4j
+        }
         
         if (redisTemplate != null) {
             redisTemplate.delete(LIKED_CACHE_KEY);
             redisTemplate.delete(VIEWS_CACHE_KEY);
-            redisTemplate.delete(REGIONAL_RANKING_PREFIX + content.getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
+            if (content.getEstadisticasRegionales() != null && !content.getEstadisticasRegionales().isEmpty()) {
+                redisTemplate.delete(REGIONAL_RANKING_PREFIX + content.getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
+            }
         }
         
         return saved;

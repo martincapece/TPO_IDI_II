@@ -34,11 +34,6 @@ Este módulo gestiona solo las relaciones necesarias para recomendaciones. La ta
   - Endpoints:
     - Asignar: POST /api/grafo/en-categoria?contenidoId={id}&categoria={c}
 
-- TIENE_TAG (Contenido -> Tag)
-  - Puede eliminarse: No desde API pública; solo mantenimiento interno/sincronización
-  - Endpoints:
-    - Asignar: POST /api/grafo/tiene-tag?contenidoId={id}&tag={t}
-
 ## Notas técnicas
 
 - Ajuste de interés: `ajustarInteres` hace MERGE de la relación y suma `delta` al `r.score`. Si el resultado es `<= 0`, se borra la relación.
