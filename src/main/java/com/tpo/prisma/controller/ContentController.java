@@ -15,14 +15,12 @@ public class ContentController {
     @Autowired
     private ContentService contentService;
 
-    // Crear contenido
     @PostMapping
     public ResponseEntity<Content> createContent(@RequestBody Content content) {
         Content created = contentService.createContent(content);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // Obtener contenido por ID (con caché Redis)
     @GetMapping("/{id}")
     public ResponseEntity<Content> getContentById(@PathVariable String id) {
         return contentService.getContentById(id)
@@ -30,58 +28,55 @@ public class ContentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Obtener todos los contenidos
     @GetMapping
     public ResponseEntity<List<Content>> getAllContents() {
         return ResponseEntity.ok(contentService.getAllContents());
     }
 
-    // Obtener contenidos por categoría
     @GetMapping("/categoria")
     public ResponseEntity<List<Content>> getContentsByCategoria(@RequestParam List<String> categorias) {
         return ResponseEntity.ok(contentService.getContentsByCategoria(categorias));
     }
 
-    // Obtener contenidos por creador
     @GetMapping("/creator/{creatorId}")
     public ResponseEntity<List<Content>> getContentsByCreator(@PathVariable String creatorId) {
         return ResponseEntity.ok(contentService.getContentsByCreator(creatorId));
     }
 
-    // Obtener contenidos por tipo
     @GetMapping("/tipo/{tipo}")
     public ResponseEntity<List<Content>> getContentsByTipo(@PathVariable String tipo) {
         return ResponseEntity.ok(contentService.getContentsByTipo(tipo));
     }
 
-    // Obtener contenidos públicos
     @GetMapping("/publicos")
     public ResponseEntity<List<Content>> getPublicContents() {
         return ResponseEntity.ok(contentService.getPublicContents());
     }
 
-    // Obtener contenidos populares (desde caché Redis)
     @GetMapping("/liked")
     public ResponseEntity<List<Content>> getLikedContents() {
         return ResponseEntity.ok(contentService.getLikedContents());
     }
 
-    // Obtener contenidos más vistos (desde caché Redis)
     @GetMapping("/vistos")
     public ResponseEntity<List<Content>> getViewsContents() {
         return ResponseEntity.ok(contentService.getViewsContents());
     }
 
-    //Obtener contenidos más vistos por región (desde caché Redis)
     @GetMapping("/vistos/{region}")
     public ResponseEntity<List<Content>> getTopContentsByRegion(@PathVariable String region) {
         return ResponseEntity.ok(contentService.getTopContentsByRegion(region));
     }
 
-    // Incrementar "me gusta"
     @PostMapping("/{id}/like")
-    public ResponseEntity<Void> incrementLikes(@PathVariable String id) {
-        contentService.incrementLikes(id);
+    public ResponseEntity<Void> incrementLikes(@PathVariable String id, @RequestParam String usuarioId) {
+        contentService.incrementLikes(id, usuarioId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/unlike")
+    public ResponseEntity<Void> decrementLikes(@PathVariable String id, @RequestParam String usuarioId) {
+        contentService.decrementLikes(id, usuarioId);
         return ResponseEntity.ok().build();
     }
 

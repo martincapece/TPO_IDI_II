@@ -20,10 +20,6 @@ public class AuthController {
     @Autowired
     private AuthService authService;
     
-    /**
-     * POST /api/auth/register
-     * Registrar un nuevo usuario
-     */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
         try {
@@ -35,16 +31,11 @@ public class AuthController {
         }
     }
     
-    /**
-     * POST /api/auth/login
-     * Iniciar sesión y crear sesión en Redis
-     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request, HttpSession session) {
         try {
             AuthResponse response = authService.login(request);
             
-            // Guardar información del usuario en la sesión (se almacenará en Redis)
             session.setAttribute("userId", response.getUserId());
             session.setAttribute("nombreUsuario", response.getNombreUsuario());
             
@@ -55,13 +46,9 @@ public class AuthController {
         }
     }
     
-    /**
-     * POST /api/auth/logout
-     * Cerrar sesión e invalidar la sesión en Redis
-     */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpSession session) {
-        session.invalidate(); // Invalida la sesión (se borra de Redis)
+        session.invalidate();
         
         Map<String, String> response = new HashMap<>();
         response.put("message", "Logout exitoso");
@@ -69,10 +56,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
     
-    /**
-     * GET /api/auth/me
-     * Obtener información del usuario autenticado
-     */
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(HttpSession session) {
         String userId = (String) session.getAttribute("userId");
@@ -86,7 +69,6 @@ public class AuthController {
         try {
             Usuario usuario = authService.getUserById(userId);
             
-            // No devolver la contraseña
             usuario.setContrasena(null);
             
             return ResponseEntity.ok(usuario);

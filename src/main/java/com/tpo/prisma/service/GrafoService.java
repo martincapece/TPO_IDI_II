@@ -14,19 +14,16 @@ public class GrafoService {
     @Autowired
     private GrafoRepository grafoRepository;
 
-    // Sincronización mínima de nodos
     @Transactional("neo4jTransactionManager")
     public void syncUsuario(String id) { grafoRepository.mergeUsuario(id); }
     @Transactional("neo4jTransactionManager")
     public void syncContenido(String id) { grafoRepository.mergeContenido(id); }
 
-    // 1) SIGUE
     @Transactional("neo4jTransactionManager")
     public void seguir(String origen, String destino) { grafoRepository.crearSigue(origen, destino); }
     @Transactional("neo4jTransactionManager")
     public void dejarDeSeguir(String origen, String destino) { grafoRepository.eliminarSigue(origen, destino); }
 
-    // 2) INTERESADO_EN
     @Transactional("neo4jTransactionManager")
     public void interesadoEn(String usuarioId, String categoria, int score) { grafoRepository.interesadoEn(usuarioId, categoria, score); }
     @Transactional("neo4jTransactionManager")
@@ -34,20 +31,18 @@ public class GrafoService {
     @Transactional("neo4jTransactionManager")
     public void eliminarInteres(String usuarioId, String categoria) { grafoRepository.eliminarInteres(usuarioId, categoria); }
 
-    // 3) VIO
     @Transactional("neo4jTransactionManager")
     public void vio(String usuarioId, String contenidoId, int secciones) { grafoRepository.registrarVista(usuarioId, contenidoId, secciones); }
 
-    // 4) LE_GUSTO
     @Transactional("neo4jTransactionManager")
     public void meGusto(String usuarioId, String contenidoId) { grafoRepository.registrarMeGusta(usuarioId, contenidoId); }
     @Transactional("neo4jTransactionManager")
     public void quitarMeGusta(String usuarioId, String contenidoId) { grafoRepository.eliminarMeGusta(usuarioId, contenidoId); }
 
-    // 5) EN_CATEGORIA
     @Transactional("neo4jTransactionManager")
     public void enCategoria(String contenidoId, String categoria) { grafoRepository.asignarCategoria(contenidoId, categoria); }
 
-    // Recomendaciones
     public List<ContenidoNode> recomendarPorIntereses(String usuarioId, int limite) { return grafoRepository.recomendarPorIntereses(usuarioId, limite); }
+
+    public boolean existeMeGusta(String usuarioId, String contenidoId) { return grafoRepository.existeMeGusta(usuarioId, contenidoId); }
 }

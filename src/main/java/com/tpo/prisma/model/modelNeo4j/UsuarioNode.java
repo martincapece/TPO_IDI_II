@@ -8,7 +8,7 @@ import org.springframework.data.neo4j.core.schema.Property;
 public class UsuarioNode {
     @Id
     @Property("id")
-    private String id; // mismo id que en MongoDB
+    private String id;
 
     public UsuarioNode() {}
     public UsuarioNode(String id) { this.id = id; }

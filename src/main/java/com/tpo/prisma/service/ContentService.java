@@ -133,17 +133,40 @@ public class ContentService {
         return contentRepository.findTopByOrderByCantVistasDesc();
     }
 
-    public void incrementLikes(String contentId) {
+    public void incrementLikes(String contentId, String usuarioId) {
+        if (!grafoService.existeMeGusta(usuarioId, contentId)) {
+            Optional<Content> contentOpt = contentRepository.findById(contentId);
+            contentOpt.ifPresent(content -> {
+                content.setCantMeGusta(content.getCantMeGusta() + 1);
+                content.setUpdatedAt(LocalDateTime.now());
+                contentRepository.save(content);
+                
+                if (redisTemplate != null) {
+                    redisTemplate.delete(LIKED_CACHE_KEY);  
+                }
+            });
+            grafoService.meGusto(usuarioId, contentId);
+        } else {
+            throw new RuntimeException("El usuario ya ha dado me gusta a este contenido");
+        }
+    }
+
+    public void decrementLikes(String contentId, String usuarioId) {
+        if (grafoService.existeMeGusta(usuarioId, contentId)) {
         Optional<Content> contentOpt = contentRepository.findById(contentId);
         contentOpt.ifPresent(content -> {
-            content.setCantMeGusta(content.getCantMeGusta() + 1);
+            content.setCantMeGusta(content.getCantMeGusta() - 1);
             content.setUpdatedAt(LocalDateTime.now());
             contentRepository.save(content);
             
             if (redisTemplate != null) {
                 redisTemplate.delete(LIKED_CACHE_KEY);  
             }
-        });
+            });
+            grafoService.quitarMeGusta(usuarioId, contentId);
+        } else {
+            throw new RuntimeException("El usuario no ha dado me gusta a este contenido");
+        }
     }
 
     @SuppressWarnings("unchecked")

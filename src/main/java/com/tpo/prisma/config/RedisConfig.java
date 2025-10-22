@@ -14,7 +14,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800) // 30 minutos
+@EnableRedisHttpSession(maxInactiveIntervalInSeconds = 1800)
 public class RedisConfig {
 
     @Bean

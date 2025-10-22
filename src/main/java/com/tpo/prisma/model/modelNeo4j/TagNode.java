@@ -6,7 +6,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Node("Tag")
 public class TagNode {
     @Id
-    private String nombre; // nombre como id
+    private String nombre;
 
     public TagNode() {}
     public TagNode(String nombre) { this.nombre = nombre; }

@@ -17,7 +17,6 @@ public class GrafoController {
     @Autowired
     private GrafoService grafoService;
 
-    // Sincronización mínima
     @PostMapping("/sincronizar/usuario/{id}")
     public ResponseEntity<Map<String, String>> syncUsuario(@PathVariable String id) {
         grafoService.syncUsuario(id);
@@ -30,7 +29,6 @@ public class GrafoController {
         return ResponseEntity.ok(Map.of("message", "Contenido sincronizado"));
     }
 
-    // 1) SIGUE
     @PostMapping("/sigue")
     public ResponseEntity<Map<String, String>> seguir(@RequestParam String origen, @RequestParam String destino) {
         grafoService.seguir(origen, destino);
@@ -43,7 +41,6 @@ public class GrafoController {
         return ResponseEntity.ok(Map.of("message", "Relación SIGUE eliminada"));
     }
 
-    // 2) INTERESADO_EN
     @PostMapping("/interes")
     public ResponseEntity<Map<String, String>> interes(@RequestParam String usuarioId, @RequestParam String categoria, @RequestParam(defaultValue = "1") int score) {
         grafoService.interesadoEn(usuarioId, categoria, score);
@@ -62,14 +59,12 @@ public class GrafoController {
         return ResponseEntity.ok(Map.of("message", "Interés eliminado"));
     }
 
-    // 3) VIO
     @PostMapping("/vio")
     public ResponseEntity<Map<String, String>> vio(@RequestParam String usuarioId, @RequestParam String contenidoId, @RequestParam(defaultValue = "1") int secciones) {
         grafoService.vio(usuarioId, contenidoId, secciones);
         return ResponseEntity.ok(Map.of("message", "Vista registrada"));
     }
 
-    // 4) LE_GUSTO
     @PostMapping("/me-gusto")
     public ResponseEntity<Map<String, String>> meGusto(@RequestParam String usuarioId, @RequestParam String contenidoId) {
         grafoService.meGusto(usuarioId, contenidoId);
@@ -82,14 +77,12 @@ public class GrafoController {
         return ResponseEntity.ok(Map.of("message", "Me gusta eliminado"));
     }
 
-    // 5) EN_CATEGORIA
     @PostMapping("/en-categoria")
     public ResponseEntity<Map<String, String>> enCategoria(@RequestParam String contenidoId, @RequestParam String categoria) {
         grafoService.enCategoria(contenidoId, categoria);
         return ResponseEntity.ok(Map.of("message", "Categoría asignada"));
     }
 
-    // Recomendaciones
     @GetMapping("/recomendar/{usuarioId}")
     public ResponseEntity<Map<String, Object>> recomendar(@PathVariable String usuarioId, @RequestParam(defaultValue = "10") int limite) {
         List<ContenidoNode> lista = grafoService.recomendarPorIntereses(usuarioId, limite);

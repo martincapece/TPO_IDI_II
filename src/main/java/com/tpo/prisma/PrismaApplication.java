@@ -37,21 +37,14 @@ public class PrismaApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("\n=== VERIFICACIÓN DE CONEXIONES A BASES DE DATOS ===");
-
-        // MongoDB
         validateMongoDB();
 
-        // Neo4j
         validateNeo4j();
 
-        // Redis
         validateRedis();
 
-        // PostgreSQL
         validatePostgreSQL();
 
-        System.out.println("\n=== FIN DE VERIFICACIÓN ===\n");
     }
 
     private void validateMongoDB() {
@@ -92,8 +85,7 @@ public class PrismaApplication implements CommandLineRunner {
 		System.out.print("Redis: ");
 		try {
 			if (redisTemplate != null) {
-				// Intenta obtener una conexión y realiza el ping
-				redisTemplate.setEnableDefaultSerializer(false); // Evita problemas de serialización
+				redisTemplate.setEnableDefaultSerializer(false);
 				String pong = redisTemplate.getConnectionFactory().getConnection().ping();
 				if ("PONG".equals(pong)) {
 					System.out.println("✅ CONECTADO");
@@ -105,7 +97,7 @@ public class PrismaApplication implements CommandLineRunner {
 			}
 		} catch (Exception e) {
 			System.out.println("❌ ERROR - Unable to connect to Redis: " + e.getClass().getName() + " - " + e.getMessage());
-			e.printStackTrace(); // Imprime el stack trace completo
+			e.printStackTrace();
 			if (e.getCause() instanceof io.netty.handler.ssl.NotSslRecordException) {
 				System.out.println("⚠️ Posible problema con SSL/TLS. Verifica el puerto y la configuración.");
 			}

@@ -17,7 +17,7 @@ public class Usuario {
     
     private String mail;
     
-    private String contrasena; // Se guardará encriptada
+    private String contrasena;
     
     private Integer edad;
     
@@ -26,16 +26,14 @@ public class Usuario {
     
     private List<String> intereses;
     
-    private List<Object> historial; // Puede ser List<Map<String, Object>> si necesitas más estructura
-    
+    private List<Object> historial;
+
     private Direccion direccion;
 
-    // Constructor vacío
     public Usuario() {
         this.cantVideos = 0;
     }
 
-    // Clase interna para Direccion
     public static class Direccion {
         private String pais;
         private String ciudad;
@@ -47,14 +45,12 @@ public class Usuario {
             this.ciudad = ciudad;
         }
 
-        // Getters y Setters
         public String getPais() { return pais; }
         public void setPais(String pais) { this.pais = pais; }
         public String getCiudad() { return ciudad; }
         public void setCiudad(String ciudad) { this.ciudad = ciudad; }
     }
 
-    // Getters y Setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

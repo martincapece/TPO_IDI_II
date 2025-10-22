@@ -22,12 +22,10 @@ public class Comentario {
     @Field("contenido_id")
     private String contenidoId;
 
-    // Constructor por defecto
     public Comentario() {
         this.createdAt = new Date();
     }
 
-    // Getters y Setters
     public String getId() {
         return id;
     }

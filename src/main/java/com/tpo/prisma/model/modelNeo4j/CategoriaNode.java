@@ -6,7 +6,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Node("Categoria")
 public class CategoriaNode {
     @Id
-    private String nombre; // nombre como id
+    private String nombre;
 
     public CategoriaNode() {}
     public CategoriaNode(String nombre) { this.nombre = nombre; }

@@ -5,7 +5,6 @@ public class AuthResponse {
     private String userId;
     private String nombreUsuario;
 
-    // Constructores
     public AuthResponse() {}
 
     public AuthResponse(String message, String userId, String nombreUsuario) {
@@ -14,7 +13,6 @@ public class AuthResponse {
         this.nombreUsuario = nombreUsuario;
     }
 
-    // Getters y Setters
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
 
