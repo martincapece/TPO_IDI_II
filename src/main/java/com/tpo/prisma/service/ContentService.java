@@ -37,8 +37,18 @@ public class ContentService {
     private static final long CACHE_TTL = 10;
 
     public Content createContent(Content content) {
+        // Auto-inicializar campos del servidor
         content.setPublishedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
+        content.setChatId(java.util.UUID.randomUUID().toString());
+        content.setCantMeGusta(0);
+        content.setDuracion(0);
+        
+        // Inicializar estadísticas regionales como mapa vacío
+        if (content.getEstadisticasRegionales() == null) {
+            content.setEstadisticasRegionales(new java.util.HashMap<>());
+        }
+        
         Content saved = contentRepository.save(content);
 
         // Sincronizar automáticamente con Neo4j

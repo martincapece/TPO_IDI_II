@@ -1,12 +1,18 @@
 package com.tpo.prisma.controller;
 
+import com.tpo.prisma.dto.ChatMessage;
+import com.tpo.prisma.dto.CreateChatMessageRequest;
 import com.tpo.prisma.model.Content;
+import com.tpo.prisma.service.ContentChatService;
 import com.tpo.prisma.service.ContentService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/contents")
@@ -15,8 +21,18 @@ public class ContentController {
     @Autowired
     private ContentService contentService;
 
+    @Autowired
+    private ContentChatService contentChatService;
+
     @PostMapping
-    public ResponseEntity<Content> createContent(@RequestBody Content content) {
+    public ResponseEntity<Content> createContent(
+            @RequestBody Content content, 
+            HttpSession session) {
+        
+        // Obtener el creatorId de la sesión
+        String creatorId = (String) session.getAttribute("userId");
+        content.setCreatorId(creatorId);
+        
         Content created = contentService.createContent(content);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -106,6 +122,59 @@ public class ContentController {
     public ResponseEntity<Void> deleteContent(@PathVariable String id) {
         boolean deleted = contentService.deleteContent(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    // ==================== CHAT ENDPOINTS (MONGODB) ====================
+    
+    @PostMapping("/{contentId}/chat")
+    public ResponseEntity<ChatMessage> sendContentChatMessage(
+            @PathVariable String contentId,
+            @RequestBody CreateChatMessageRequest request,
+            HttpSession session) {
+        
+        Content content = contentService.getContentById(contentId)
+                .orElseThrow(() -> new RuntimeException("Content no encontrado"));
+        
+        String userId = (String) session.getAttribute("userId");
+        String username = (String) session.getAttribute("nombreUsuario");
+        
+        ChatMessage message = contentChatService.sendMessage(
+                content.getChatId(), 
+                contentId, 
+                userId, 
+                username, 
+                request.getText()
+        );
+        
+        return ResponseEntity.ok(message);
+    }
+
+    @GetMapping("/{contentId}/chat")
+    public ResponseEntity<List<ChatMessage>> getContentChatMessages(
+            @PathVariable String contentId,
+            @RequestParam(defaultValue = "50") int limit) {
+        
+        Content content = contentService.getContentById(contentId)
+                .orElseThrow(() -> new RuntimeException("Content no encontrado"));
+        
+        List<ChatMessage> messages = contentChatService.getRecentMessages(content.getChatId(), limit);
+        
+        return ResponseEntity.ok(messages);
+    }
+
+    @DeleteMapping("/{contentId}/chat")
+    public ResponseEntity<Map<String, String>> clearContentChat(@PathVariable String contentId) {
+        
+        Content content = contentService.getContentById(contentId)
+                .orElseThrow(() -> new RuntimeException("Content no encontrado"));
+        
+        contentChatService.clearChat(content.getChatId());
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Chat de Content limpiado correctamente");
+        response.put("storage", "MongoDB");
+        
+        return ResponseEntity.ok(response);
     }
 }
 

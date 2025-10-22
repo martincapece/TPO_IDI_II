@@ -14,7 +14,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -36,7 +35,6 @@ public class DonacionService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    @Transactional
     public DonacionResponse procesarDonacion(DonacionRequest request) {
         validarDonacion(request);
         
@@ -123,7 +121,6 @@ public class DonacionService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public void sincronizarStreaming(String streamMongoId, String creadorMongoId) {
         if (!usuarioRefRepository.existsById(creadorMongoId)) {
             UsuarioRef usuario = new UsuarioRef(creadorMongoId);
@@ -140,7 +137,6 @@ public class DonacionService {
         }
     }
     
-    @Transactional
     public void finalizarStreaming(String streamMongoId) {
         streamingRefRepository.findById(streamMongoId).ifPresent(streaming -> {
             streaming.setEnVivo(false);

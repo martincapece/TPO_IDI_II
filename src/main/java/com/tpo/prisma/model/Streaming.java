@@ -1,5 +1,6 @@
 package com.tpo.prisma.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
@@ -10,18 +11,34 @@ import java.util.Map;
 public class Streaming {
 
     @Id
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String id;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String creatorId;
+    
     private String titulo;
     private String lenguaje;
     private List<String> categoria;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime horaComienzo;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime horaFinalizado;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String chatId;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Boolean enVivo;
+    
     private String region;
     
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private EstadisticasVivo estadisticasVivo;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Map<String, Integer> estadisticasRegionales;
 
     public Streaming() {

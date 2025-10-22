@@ -1,5 +1,6 @@
 package com.tpo.prisma.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.util.Map;
 public class Content {
     
     @Id
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String id;
     
     private String tipo;
@@ -17,13 +19,26 @@ public class Content {
     private String lenguaje;
     private List<String> categoria;
     private String visibilidad;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer duracion;
     
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String chatId;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Map<String, Integer> estadisticasRegionales;
     
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String creatorId;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer cantMeGusta;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime publishedAt;
+    
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime updatedAt;
 
     public Content() {
@@ -87,6 +102,14 @@ public class Content {
 
     public void setDuracion(Integer duracion) {
         this.duracion = duracion;
+    }
+
+    public String getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(String chatId) {
+        this.chatId = chatId;
     }
 
     public Map<String, Integer> getEstadisticasRegionales() {

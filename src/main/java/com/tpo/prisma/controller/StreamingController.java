@@ -1,12 +1,18 @@
 package com.tpo.prisma.controller;
 
+import com.tpo.prisma.dto.ChatMessage;
+import com.tpo.prisma.dto.CreateChatMessageRequest;
 import com.tpo.prisma.model.Streaming;
+import com.tpo.prisma.service.StreamingChatService;
 import com.tpo.prisma.service.StreamingService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/streamings")
@@ -14,9 +20,19 @@ public class StreamingController {
 
     @Autowired
     private StreamingService streamingService;
+
+    @Autowired
+    private StreamingChatService streamingChatService;
     
     @PostMapping
-    public ResponseEntity<Streaming> createStreaming(@RequestBody Streaming streaming) {
+    public ResponseEntity<Streaming> createStreaming(
+            @RequestBody Streaming streaming, 
+            HttpSession session) {
+        
+        // Obtener el creatorId de la sesión
+        String creatorId = (String) session.getAttribute("userId");
+        streaming.setCreatorId(creatorId);
+        
         Streaming created = streamingService.createStreaming(streaming);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -45,7 +61,14 @@ public class StreamingController {
     @PostMapping("/{id}/finalizar")
     public ResponseEntity<Streaming> finalizarStreaming(@PathVariable String id) {
         return streamingService.finalizarStreaming(id)
-                .map(ResponseEntity::ok)
+                .map(streaming -> {
+                    // Configurar expiración del chat: 5 minutos después de finalizar
+                    // Solo si el streaming tiene chatId (streamings antiguos no lo tienen)
+                    if (streaming.getChatId() != null && !streaming.getChatId().isEmpty()) {
+                        streamingChatService.setExpirationOnStreamEnd(streaming.getChatId());
+                    }
+                    return ResponseEntity.ok(streaming);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -109,5 +132,86 @@ public class StreamingController {
             @RequestParam Integer espectadores) {
         streamingService.updateRegionalStats(id, region, espectadores);
         return ResponseEntity.ok().build();
+    }
+
+    // ==================== CHAT ENDPOINTS (REDIS) ====================
+    
+    @PostMapping("/{streamId}/chat")
+    public ResponseEntity<ChatMessage> sendStreamingChatMessage(
+            @PathVariable String streamId,
+            @RequestBody CreateChatMessageRequest request,
+            HttpSession session) {
+        
+        Streaming streaming = streamingService.getStreamingById(streamId)
+                .orElseThrow(() -> new RuntimeException("Streaming no encontrado"));
+        
+        String userId = (String) session.getAttribute("userId");
+        String username = (String) session.getAttribute("nombreUsuario");
+        
+        ChatMessage message = streamingChatService.sendMessage(
+                streaming.getChatId(), 
+                streamId, 
+                userId, 
+                username, 
+                request.getText()
+        );
+        
+        return ResponseEntity.ok(message);
+    }
+
+    @GetMapping("/{streamId}/chat")
+    public ResponseEntity<List<ChatMessage>> getStreamingChatMessages(
+            @PathVariable String streamId,
+            @RequestParam(defaultValue = "50") int limit) {
+        
+        Streaming streaming = streamingService.getStreamingById(streamId)
+                .orElseThrow(() -> new RuntimeException("Streaming no encontrado"));
+        
+        List<ChatMessage> messages = streamingChatService.getRecentMessages(streaming.getChatId(), limit);
+        
+        return ResponseEntity.ok(messages);
+    }
+
+    @DeleteMapping("/{streamId}/chat")
+    public ResponseEntity<Map<String, String>> clearStreamingChat(@PathVariable String streamId) {
+        
+        Streaming streaming = streamingService.getStreamingById(streamId)
+                .orElseThrow(() -> new RuntimeException("Streaming no encontrado"));
+        
+        streamingChatService.clearChat(streaming.getChatId());
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Chat de Streaming limpiado correctamente");
+        response.put("storage", "Redis");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{streamId}/chat/ttl")
+    public ResponseEntity<Map<String, Object>> getChatTTL(@PathVariable String streamId) {
+        
+        Streaming streaming = streamingService.getStreamingById(streamId)
+                .orElseThrow(() -> new RuntimeException("Streaming no encontrado"));
+        
+        Long ttlSeconds = streamingChatService.getChatTTL(streaming.getChatId());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("chatId", streaming.getChatId());
+        response.put("streamId", streamId);
+        
+        if (ttlSeconds == null || ttlSeconds == -2) {
+            response.put("status", "Chat no existe");
+            response.put("ttl", null);
+        } else if (ttlSeconds == -1) {
+            response.put("status", "Sin expiración (streaming activo)");
+            response.put("ttl", -1);
+        } else {
+            response.put("status", "Chat expirará en:");
+            response.put("ttlSeconds", ttlSeconds);
+            response.put("ttlMinutes", Math.round(ttlSeconds / 60.0 * 100.0) / 100.0);
+            response.put("expirationConfigured", "5 minutos después de finalizar");
+        }
+        
+        return ResponseEntity.ok(response);
     }
 }

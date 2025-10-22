@@ -23,8 +23,9 @@ public class StreamingService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    @Autowired
-    private DonacionService donacionService;
+    // TODO: Descomentar cuando se configure correctamente el TransactionManager para PostgreSQL
+    // @Autowired
+    // private DonacionService donacionService;
     
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
@@ -37,16 +38,23 @@ public class StreamingService {
     
     
     public Streaming createStreaming(Streaming streaming) {
+        // Auto-inicializar campos del servidor
         streaming.setHoraComienzo(LocalDateTime.now());
         streaming.setEnVivo(true);
+        streaming.setChatId(java.util.UUID.randomUUID().toString());
         
-        if (streaming.getEstadisticasVivo() == null) {
-            streaming.setEstadisticasVivo(new Streaming.EstadisticasVivo());
+        // Inicializar estadísticas en 0
+        streaming.setEstadisticasVivo(new Streaming.EstadisticasVivo());
+        
+        // Inicializar estadísticas regionales como mapa vacío
+        if (streaming.getEstadisticasRegionales() == null) {
+            streaming.setEstadisticasRegionales(new java.util.HashMap<>());
         }
         
         Streaming saved = streamingRepository.save(streaming);
 
-        donacionService.sincronizarStreaming(saved.getId(), saved.getCreatorId());
+        // TODO: Descomentar cuando se configure correctamente el TransactionManager para PostgreSQL
+        // donacionService.sincronizarStreaming(saved.getId(), saved.getCreatorId());
         
         if (redisTemplate != null) {
             redisTemplate.delete(LIVE_CACHE_KEY);
@@ -105,7 +113,8 @@ public class StreamingService {
             
             Streaming saved = streamingRepository.save(streaming);
 
-            donacionService.finalizarStreaming(id);
+            // TODO: Descomentar cuando se configure correctamente el TransactionManager para PostgreSQL
+            // donacionService.finalizarStreaming(id);
             
             if (redisTemplate != null) {
                 redisTemplate.delete(LIVE_CACHE_KEY);
