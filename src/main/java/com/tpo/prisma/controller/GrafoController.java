@@ -105,4 +105,13 @@ public class GrafoController {
         return ResponseEntity.ok(grafoService.seguidores(userId));
     }
 
+    @GetMapping("/recomendados")
+    public ResponseEntity<Map<String, Object>> usuariosRecomendados(@AuthenticationPrincipal String userId) {
+        List<String> recomendados = grafoService.usuariosRecomendados(userId);
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("message", "Usuarios recomendados obtenidos");
+        resp.put("data", recomendados);
+        return ResponseEntity.ok(resp);
+    }
+
 }

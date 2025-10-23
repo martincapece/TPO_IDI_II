@@ -51,4 +51,7 @@ public class GrafoService {
 
     @Transactional("neo4jTransactionManager")
     public List<String> seguidores(String usuarioId) { return grafoRepository.seguidores(usuarioId); }
+
+    @Transactional("neo4jTransactionManager")
+    public List<String> usuariosRecomendados(String usuarioId) { return grafoRepository.usuariosRecomendados(usuarioId); }
 }

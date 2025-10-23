@@ -56,4 +56,12 @@ public interface GrafoRepository extends Neo4jRepository<UsuarioNode, String> {
 
     @Query("MATCH (u:Usuario {id:$usuarioId})-[:SIGUE]->(c:Usuario) RETURN c.id")
     List<String> seguidores(@Param("usuarioId") String usuarioId);
+
+    // Encuentra usuarios recomendados: usuarios seguidos por las personas que el usuario sigue
+    // Excluye: al usuario mismo y usuarios que ya sigue
+    @Query("MATCH (u:Usuario {id:$usuarioId})-[:SIGUE]->(amigo:Usuario)-[:SIGUE]->(recomendado:Usuario) " +
+           "WHERE NOT (u)-[:SIGUE]->(recomendado) " +
+           "AND u.id <> recomendado.id " +
+           "RETURN DISTINCT recomendado.id AS id")
+    List<String> usuariosRecomendados(@Param("usuarioId") String usuarioId);
 }
