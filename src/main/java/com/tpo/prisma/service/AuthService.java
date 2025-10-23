@@ -69,7 +69,8 @@ public class AuthService {
         return new AuthResponse(
             "Usuario registrado exitosamente",
             savedUser.getId(),
-            savedUser.getNombreUsuario()
+            savedUser.getNombreUsuario(),
+            savedUser.getDireccion() != null ? savedUser.getDireccion().getPais() : null
         );
     }
     
@@ -84,7 +85,8 @@ public class AuthService {
         return new AuthResponse(
             "Login exitoso",
             usuario.getId(),
-            usuario.getNombreUsuario()
+            usuario.getNombreUsuario(),
+            usuario.getDireccion() != null ? usuario.getDireccion().getPais() : null
         );
     }
     

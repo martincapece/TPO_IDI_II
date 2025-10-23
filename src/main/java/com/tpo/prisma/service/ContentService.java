@@ -2,6 +2,7 @@ package com.tpo.prisma.service;
 
 import com.tpo.prisma.model.Content;
 import com.tpo.prisma.repository.ContentRepository;
+import com.tpo.prisma.repository.UserRepository;
 import com.tpo.prisma.service.GrafoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -31,6 +32,12 @@ public class ContentService {
     @Autowired
     private GrafoService grafoService;
 
+    @Autowired
+    private NotificacionService notificacionService;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private static final String LIKED_CACHE_KEY = "content:liked";
     private static final String VIEWS_CACHE_KEY = "content:views";
     private static final String REGIONAL_RANKING_PREFIX = "content:regional:";
@@ -51,12 +58,9 @@ public class ContentService {
         
         Content saved = contentRepository.save(content);
 
-        // Sincronizar automáticamente con Neo4j
         try {
-            // 1. Crear nodo Contenido en Neo4j
             grafoService.syncContenido(saved.getId());
             
-            // 2. Crear relaciones EN_CATEGORIA para cada categoría
             if (saved.getCategoria() != null && !saved.getCategoria().isEmpty()) {
                 for (String categoria : saved.getCategoria()) {
                     if (categoria != null && !categoria.trim().isEmpty()) {
@@ -66,7 +70,6 @@ public class ContentService {
             }
         } catch (Exception e) {
             System.err.println("[Neo4j] Error sincronizando contenido: " + e.getMessage());
-            // No fallar la creación si falla Neo4j
         }
         
         if (redisTemplate != null) {
@@ -76,7 +79,12 @@ public class ContentService {
                 redisTemplate.delete(REGIONAL_RANKING_PREFIX + content.getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
             }
         }
-        
+
+        String creatorUser = userRepository.findById(saved.getCreatorId())
+        .map(u -> u.getNombreUsuario()) 
+        .orElse(saved.getCreatorId());
+
+        notificacionService.emitirContenidoPublicado(creatorUser, saved.getId());
         return saved;
     }
 
@@ -255,5 +263,28 @@ public class ContentService {
             return true;
         }
         return false;
+    }
+
+    public void enterContent(String contentId, String usuarioId, String region, int secciones) {
+
+        var q = new Query(Criteria.where("_id").is(contentId));
+        var u = new org.springframework.data.mongodb.core.query.Update()
+                .inc("cantVistas", 1)
+                .set("updatedAt", LocalDateTime.now());
+    
+        if (region != null && !region.isBlank()) {
+            u.inc("estadisticasRegionales." + region.toLowerCase(), 1);
+        }
+    
+        mongoTemplate.updateFirst(q, u, Content.class);
+    
+        grafoService.vio(usuarioId, contentId, Math.max(1, secciones));
+    
+        if (redisTemplate != null) {
+            redisTemplate.delete(VIEWS_CACHE_KEY);
+            if (region != null && !region.isBlank()) {
+                redisTemplate.delete(REGIONAL_RANKING_PREFIX + region.toLowerCase());
+            }
+        }
     }
 }

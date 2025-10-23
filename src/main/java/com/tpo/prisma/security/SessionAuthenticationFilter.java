@@ -16,10 +16,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
-/**
- * Autentica peticiones en base a la HttpSession (almacenada en Redis por Spring Session).
- * Si existe el atributo "userId" en la sesión, se considera autenticado.
- */
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
     private static final AntPathMatcher matcher = new AntPathMatcher();
@@ -30,7 +26,6 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Permitir endpoints públicos y preflight
         if (isPublic(path) || isPreflight(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -44,7 +39,6 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Popular SecurityContext para el resto de la request
         Authentication auth = new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(auth);
 

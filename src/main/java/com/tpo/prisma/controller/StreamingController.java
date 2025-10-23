@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/streamings")
@@ -59,11 +60,9 @@ public class StreamingController {
     }
     
     @PostMapping("/{id}/finalizar")
-    public ResponseEntity<Streaming> finalizarStreaming(@PathVariable String id) {
-        return streamingService.finalizarStreaming(id)
+    public ResponseEntity<Streaming> finalizarStreaming(@PathVariable String id, @AuthenticationPrincipal String userId) {
+        return streamingService.finalizarStreaming(id, userId)
                 .map(streaming -> {
-                    // Configurar expiración del chat: 5 minutos después de finalizar
-                    // Solo si el streaming tiene chatId (streamings antiguos no lo tienen)
                     if (streaming.getChatId() != null && !streaming.getChatId().isEmpty()) {
                         streamingChatService.setExpirationOnStreamEnd(streaming.getChatId());
                     }
@@ -133,8 +132,6 @@ public class StreamingController {
         streamingService.updateRegionalStats(id, region, espectadores);
         return ResponseEntity.ok().build();
     }
-
-    // ==================== CHAT ENDPOINTS (REDIS) ====================
     
     @PostMapping("/{streamId}/chat")
     public ResponseEntity<ChatMessage> sendStreamingChatMessage(
@@ -214,4 +211,21 @@ public class StreamingController {
         
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/{id}/join")
+    public ResponseEntity<Void> join(
+            @PathVariable String id,
+            @RequestParam(required=false) String region,
+            @AuthenticationPrincipal String userId) {
+        streamingService.joinStreaming(id, userId, region);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/leave")
+    public ResponseEntity<Void> leave(
+            @PathVariable String id,
+            @AuthenticationPrincipal String userId) {
+        streamingService.leaveStreaming(id, userId);
+        return ResponseEntity.ok().build();
+}
+
 }

@@ -11,7 +11,6 @@ public class RegisterRequest {
     private List<String> intereses;
     private Usuario.Direccion direccion;
 
-    // Constructores
     public RegisterRequest() {}
 
     public RegisterRequest(String nombreUsuario, String mail, String contrasena, 
@@ -24,7 +23,6 @@ public class RegisterRequest {
         this.direccion = direccion;
     }
 
-    // Getters y Setters
     public String getNombreUsuario() { return nombreUsuario; }
     public void setNombreUsuario(String nombreUsuario) { this.nombreUsuario = nombreUsuario; }
 

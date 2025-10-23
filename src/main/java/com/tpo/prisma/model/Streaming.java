@@ -52,12 +52,16 @@ public class Streaming {
         private Integer promedioEspectadores;
         private Integer espectadores;
         private Integer cantDonaciones;
+        private Integer sumMuestras;
+        private Integer cantMuestras;
 
         public EstadisticasVivo() {
             this.picoEspectadores = 0;
             this.promedioEspectadores = 0;
             this.espectadores = 0;
             this.cantDonaciones = 0;
+            this.sumMuestras = 0;
+            this.cantMuestras = 0;
         }
 
         public EstadisticasVivo(Integer pico, Integer promedio, Integer espectadores, Integer donaciones) {
@@ -65,6 +69,16 @@ public class Streaming {
             this.promedioEspectadores = promedio;
             this.espectadores = espectadores;
             this.cantDonaciones = donaciones;
+            this.sumMuestras = 0;
+            this.cantMuestras = 0;
+        }
+
+        public void sample(int current) {
+            this.espectadores = current;
+            if (current > picoEspectadores) picoEspectadores = current;
+            sumMuestras += current;
+            cantMuestras += 1;
+            promedioEspectadores = (int) Math.round(sumMuestras / (double) cantMuestras);
         }
 
         public Integer getPicoEspectadores() {
@@ -103,6 +117,22 @@ public class Streaming {
             if (espectadoresActuales > this.picoEspectadores) {
                 this.picoEspectadores = espectadoresActuales;
             }
+        }
+
+        public Integer getSumMuestras() {
+            return sumMuestras;
+        }
+
+        public void setSumMuestras(Integer sumMuestras) {
+            this.sumMuestras = sumMuestras;
+        }
+
+        public Integer getCantMuestras() {
+            return cantMuestras;
+        }
+
+        public void setCantMuestras(Integer cantMuestras) {
+            this.cantMuestras = cantMuestras;
         }
     }
 
@@ -226,7 +256,4 @@ public class Streaming {
                 .mapToInt(Integer::intValue)
                 .sum();
     }
-
-
-    
 }

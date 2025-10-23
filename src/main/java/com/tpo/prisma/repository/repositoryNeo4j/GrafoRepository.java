@@ -50,4 +50,10 @@ public interface GrafoRepository extends Neo4jRepository<UsuarioNode, String> {
 
     @Query("MATCH (u:Usuario {id:$usuarioId})-[r:LE_GUSTO]->(c:Contenido {id:$contenidoId}) RETURN COUNT(r) > 0")
     boolean existeMeGusta(@Param("usuarioId") String usuarioId, @Param("contenidoId") String contenidoId);
+
+    @Query("MATCH (u:Usuario {id:$usuarioId})-[r:VIO]->(c:Contenido) RETURN c.id AS id ORDER BY r.timestamp DESC LIMIT $limite")
+    List<String> historialVistos(@Param("usuarioId") String usuarioId, @Param("limite") int limite);
+
+    @Query("MATCH (u:Usuario {id:$usuarioId})-[:SIGUE]->(c:Usuario) RETURN c.id")
+    List<String> seguidores(@Param("usuarioId") String usuarioId);
 }

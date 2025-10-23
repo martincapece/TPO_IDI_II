@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/contents")
@@ -123,8 +124,6 @@ public class ContentController {
         boolean deleted = contentService.deleteContent(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
-
-    // ==================== CHAT ENDPOINTS (MONGODB) ====================
     
     @PostMapping("/{contentId}/chat")
     public ResponseEntity<ChatMessage> sendContentChatMessage(
@@ -176,5 +175,17 @@ public class ContentController {
         
         return ResponseEntity.ok(response);
     }
-}
+
+    @PostMapping("/{id}/enter")
+    public ResponseEntity<Void> enterContent(
+            @PathVariable String id,
+            @RequestParam(required = false) String region,
+            @RequestParam(defaultValue = "1") int secciones,
+            @AuthenticationPrincipal String userId
+    ) {
+
+        contentService.enterContent(id, userId, region, secciones);
+        return ResponseEntity.ok().build();
+    }
+}   
 

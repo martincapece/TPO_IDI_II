@@ -4,7 +4,6 @@ public class LoginRequest {
     private String mail;
     private String contrasena;
 
-    // Constructores
     public LoginRequest() {}
 
     public LoginRequest(String mail, String contrasena) {
@@ -12,7 +11,6 @@ public class LoginRequest {
         this.contrasena = contrasena;
     }
 
-    // Getters y Setters
     public String getMail() { return mail; }
     public void setMail(String mail) { this.mail = mail; }
 

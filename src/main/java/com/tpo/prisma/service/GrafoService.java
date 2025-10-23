@@ -45,4 +45,10 @@ public class GrafoService {
     public List<ContenidoNode> recomendarPorIntereses(String usuarioId, int limite) { return grafoRepository.recomendarPorIntereses(usuarioId, limite); }
 
     public boolean existeMeGusta(String usuarioId, String contenidoId) { return grafoRepository.existeMeGusta(usuarioId, contenidoId); }
+
+    @Transactional("neo4jTransactionManager")
+    public List<String> historialVistos(String usuarioId, int limite) { return grafoRepository.historialVistos(usuarioId, limite); }
+
+    @Transactional("neo4jTransactionManager")
+    public List<String> seguidores(String usuarioId) { return grafoRepository.seguidores(usuarioId); }
 }

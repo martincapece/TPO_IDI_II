@@ -1,7 +1,11 @@
 package com.tpo.prisma.service;
 
 import com.tpo.prisma.model.Streaming;
+import com.tpo.prisma.model.Usuario;
+import com.tpo.prisma.repository.NotificacionRepository;
 import com.tpo.prisma.repository.StreamingRepository;
+
+import org.apache.logging.log4j.util.Cast;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -9,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import com.tpo.prisma.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,12 +28,20 @@ public class StreamingService {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    // TODO: Descomentar cuando se configure correctamente el TransactionManager para PostgreSQL
-    // @Autowired
-    // private DonacionService donacionService;
+    @Autowired
+    private DonacionService donacionService;
+
+    @Autowired
+    private UserRepository userRepository; 
+
+    @Autowired
+    private NotificacionService notificacionService;
     
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired(required = false)
+    private RedisTemplate<String, String> redisStr;
     
     private static final String LIVE_CACHE_KEY = "streaming:live";
     private static final String TOP_VIEWERS_CACHE_KEY = "streaming:top:viewers";
@@ -36,25 +49,22 @@ public class StreamingService {
     private static final long CACHE_TTL = 1;
     private static final long RANKING_CACHE_TTL = 5;
     
-    
+    private String viewersKey(String id) { return "streaming:%s:viewers".formatted(id); }
+
     public Streaming createStreaming(Streaming streaming) {
-        // Auto-inicializar campos del servidor
         streaming.setHoraComienzo(LocalDateTime.now());
         streaming.setEnVivo(true);
         streaming.setChatId(java.util.UUID.randomUUID().toString());
         
-        // Inicializar estadísticas en 0
         streaming.setEstadisticasVivo(new Streaming.EstadisticasVivo());
         
-        // Inicializar estadísticas regionales como mapa vacío
         if (streaming.getEstadisticasRegionales() == null) {
             streaming.setEstadisticasRegionales(new java.util.HashMap<>());
         }
         
         Streaming saved = streamingRepository.save(streaming);
 
-        // TODO: Descomentar cuando se configure correctamente el TransactionManager para PostgreSQL
-        // donacionService.sincronizarStreaming(saved.getId(), saved.getCreatorId());
+        donacionService.sincronizarStreaming(saved.getId(), saved.getCreatorId());
         
         if (redisTemplate != null) {
             redisTemplate.delete(LIVE_CACHE_KEY);
@@ -62,7 +72,12 @@ public class StreamingService {
                 redisTemplate.delete(REGIONAL_RANKING_PREFIX + streaming.getRegion().toLowerCase());
             }
         }
-        
+
+        String creatorUser = userRepository.findById(saved.getCreatorId())
+            .map(Usuario::getNombreUsuario)
+            .orElse(saved.getCreatorId());
+
+        notificacionService.emitirStreamIniciado(creatorUser, saved.getId());
         return saved;
     }
     
@@ -106,23 +121,38 @@ public class StreamingService {
     }
     
     
-    public Optional<Streaming> finalizarStreaming(String id) {
+    public Optional<Streaming> finalizarStreaming(String id, String userId) {
         return streamingRepository.findById(id).map(streaming -> {
+            if (redisStr != null) {
+                    if (streaming.getCreatorId() == userId ) {
+                        Long last = redisStr.opsForSet().size(viewersKey(id));
+                        if (last != null) {
+                            var stats = streaming.getEstadisticasVivo();
+                            long newSum = stats.getSumMuestras() + last;
+                            long newCnt = stats.getCantMuestras() + 1;
+                            stats.setSumMuestras((int) newSum);
+                            stats.setCantMuestras((int) newCnt);
+                            stats.setPromedioEspectadores((int)Math.round(newSum / (double)newCnt));
+                            stats.setEspectadores(last.intValue());
+                            streaming.setEstadisticasVivo(stats);
+                        }
+                        redisStr.delete(viewersKey(id));
+                    }else{
+                        return null;
+                    }
+            }
             streaming.setEnVivo(false);
             streaming.setHoraFinalizado(LocalDateTime.now());
-            
             Streaming saved = streamingRepository.save(streaming);
-
-            // TODO: Descomentar cuando se configure correctamente el TransactionManager para PostgreSQL
-            // donacionService.finalizarStreaming(id);
-            
+    
             if (redisTemplate != null) {
                 redisTemplate.delete(LIVE_CACHE_KEY);
+                redisTemplate.delete(TOP_VIEWERS_CACHE_KEY);
                 if (streaming.getRegion() != null) {
                     redisTemplate.delete(REGIONAL_RANKING_PREFIX + streaming.getRegion().toLowerCase());
                 }
             }
-            
+            donacionService.finalizarStreaming(id);
             return saved;
         });
     }
@@ -163,6 +193,93 @@ public class StreamingService {
             stats.setPromedioEspectadores(promedio);
             streaming.setEstadisticasVivo(stats);
             streamingRepository.save(streaming);
+        });
+    }
+
+    public void joinStreaming(String streamingId, String userId, String region) {
+        var opt = streamingRepository.findById(streamingId);
+        opt.ifPresent(streaming -> {
+            if (!Boolean.TRUE.equals(streaming.getEnVivo())) return;
+    
+            Long current = 0L;
+    
+            if (redisStr != null) {
+                redisStr.opsForSet().add(viewersKey(streamingId), userId);
+                current = redisStr.opsForSet().size(viewersKey(streamingId));
+            } else {
+                current = (long) (streaming.getEstadisticasVivo().getEspectadores() + 1);
+            }
+    
+            int cur = current.intValue();   
+            mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(streamingId).and("enVivo").is(true)),
+                new org.springframework.data.mongodb.core.query.Update()
+                    .set("estadisticasVivo.espectadores", cur)
+                    .max("estadisticasVivo.picoEspectadores", cur)
+                    .inc("estadisticasVivo.sumMuestras", cur)
+                    .inc("estadisticasVivo.cantMuestras", 1)
+                    .set("estadisticasVivo.promedioEspectadores",
+                         Math.toIntExact(Math.round(
+                           (streaming.getEstadisticasVivo().getSumMuestras() + cur) /
+                           (double) (streaming.getEstadisticasVivo().getCantMuestras() + 1)
+                         )))
+                , Streaming.class
+            );
+    
+            if (region != null && !region.isBlank()) {
+                mongoTemplate.updateFirst(
+                    Query.query(Criteria.where("_id").is(streamingId).and("enVivo").is(true)),
+                    new org.springframework.data.mongodb.core.query.Update()
+                        .inc("estadisticasRegionales." + region.toLowerCase(), 1),
+                    Streaming.class
+                );
+            }
+    
+            if (redisTemplate != null) {
+                redisTemplate.delete(LIVE_CACHE_KEY);
+                redisTemplate.delete(TOP_VIEWERS_CACHE_KEY);
+                if (streaming.getRegion() != null) {
+                    redisTemplate.delete(REGIONAL_RANKING_PREFIX + streaming.getRegion().toLowerCase());
+                }
+            }
+        });
+    }
+
+    public void leaveStreaming(String streamingId, String userId) {
+        var opt = streamingRepository.findById(streamingId);
+        opt.ifPresent(streaming -> {
+            if (!Boolean.TRUE.equals(streaming.getEnVivo())) return;
+
+            Long current = 0L;
+            if (redisStr != null) {
+                redisStr.opsForSet().remove(viewersKey(streamingId), userId);
+                current = redisStr.opsForSet().size(viewersKey(streamingId));
+            } else {
+                current = (long) Math.max(0, streaming.getEstadisticasVivo().getEspectadores() - 1);
+            }
+
+            int cur = current.intValue();
+            mongoTemplate.updateFirst(
+                Query.query(Criteria.where("_id").is(streamingId).and("enVivo").is(true)),
+                new org.springframework.data.mongodb.core.query.Update()
+                    .set("estadisticasVivo.espectadores", cur)
+                    .inc("estadisticasVivo.sumMuestras", cur)
+                    .inc("estadisticasVivo.cantMuestras", 1)
+                    .set("estadisticasVivo.promedioEspectadores",
+                        Math.toIntExact(Math.round(
+                        (streaming.getEstadisticasVivo().getSumMuestras() + cur) /
+                        (double) (streaming.getEstadisticasVivo().getCantMuestras() + 1)
+                        )))
+                , Streaming.class
+            );
+
+            if (redisTemplate != null) {
+                redisTemplate.delete(LIVE_CACHE_KEY);
+                redisTemplate.delete(TOP_VIEWERS_CACHE_KEY);
+                if (streaming.getRegion() != null) {
+                    redisTemplate.delete(REGIONAL_RANKING_PREFIX + streaming.getRegion().toLowerCase());
+                }
+            }
         });
     }
     

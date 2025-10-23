@@ -5,6 +5,7 @@ import com.tpo.prisma.service.GrafoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,14 +31,14 @@ public class GrafoController {
     }
 
     @PostMapping("/sigue")
-    public ResponseEntity<Map<String, String>> seguir(@RequestParam String origen, @RequestParam String destino) {
-        grafoService.seguir(origen, destino);
+    public ResponseEntity<Map<String, String>> seguir(@AuthenticationPrincipal String userId, @RequestParam String destino) {
+        grafoService.seguir(userId, destino);
         return ResponseEntity.ok(Map.of("message", "Relación SIGUE creada"));
     }
 
     @DeleteMapping("/sigue")
-    public ResponseEntity<Map<String, String>> dejarDeSeguir(@RequestParam String origen, @RequestParam String destino) {
-        grafoService.dejarDeSeguir(origen, destino);
+    public ResponseEntity<Map<String, String>> dejarDeSeguir(@AuthenticationPrincipal String userId, @RequestParam String destino) {
+        grafoService.dejarDeSeguir(userId, destino);
         return ResponseEntity.ok(Map.of("message", "Relación SIGUE eliminada"));
     }
 
@@ -91,4 +92,17 @@ public class GrafoController {
         resp.put("data", lista);
         return ResponseEntity.ok(resp);
     }
+
+    @GetMapping("/historial/{usuarioId}")
+    public ResponseEntity<List<String>> miHistorial(
+        @AuthenticationPrincipal String userId,
+        @RequestParam(defaultValue = "50") int limite) {
+    return ResponseEntity.ok(grafoService.historialVistos(userId, limite));
+    }
+
+    @GetMapping("/seguidores/{usuarioId}")
+    public ResponseEntity<List<String>> seguidores(@AuthenticationPrincipal String userId) {
+        return ResponseEntity.ok(grafoService.seguidores(userId));
+    }
+
 }

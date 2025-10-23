@@ -13,6 +13,7 @@ public class Notificacion {
     private String contentId;
     private String creatorUser;
 
+    public Notificacion() {} 
     public Notificacion(String mensaje, String contentId, String creatorUser) {
         this.mensaje = mensaje;
         this.contentId = contentId;
