@@ -19,5 +19,12 @@ public class NotificacionController {
     /**
      * Lista las notificaciones del usuario autenticado.
      */
+    @GetMapping("/feed")
+    public ResponseEntity<List<Notificacion>> feed(@AuthenticationPrincipal String userId,
+                                                   @RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "20") int size) {
+        List<Notificacion> notis = notificacionService.feedParaUsuario(userId, page, size);
+        return ResponseEntity.ok(notis);
+    }
 
 }

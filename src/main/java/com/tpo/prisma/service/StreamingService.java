@@ -1,19 +1,14 @@
 package com.tpo.prisma.service;
 
 import com.tpo.prisma.model.Streaming;
-import com.tpo.prisma.model.Usuario;
-import com.tpo.prisma.repository.NotificacionRepository;
 import com.tpo.prisma.repository.StreamingRepository;
 
-import org.apache.logging.log4j.util.Cast;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import com.tpo.prisma.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +26,9 @@ public class StreamingService {
     @Autowired
     private DonacionService donacionService;
 
-    @Autowired
-    private UserRepository userRepository; 
+    // Ya no necesitamos el repositorio de usuario para notificaciones
+    // @Autowired
+    // private UserRepository userRepository; 
 
     @Autowired
     private NotificacionService notificacionService;
@@ -47,7 +43,7 @@ public class StreamingService {
     private static final String TOP_VIEWERS_CACHE_KEY = "streaming:top:viewers";
     private static final String REGIONAL_RANKING_PREFIX = "streaming:regional:";
     private static final long CACHE_TTL = 1;
-    private static final long RANKING_CACHE_TTL = 5;
+    // private static final long RANKING_CACHE_TTL = 5; // Reservado para futuros rankings
     
     private String viewersKey(String id) { return "streaming:%s:viewers".formatted(id); }
 
@@ -73,11 +69,8 @@ public class StreamingService {
             }
         }
 
-        String creatorUser = userRepository.findById(saved.getCreatorId())
-            .map(Usuario::getNombreUsuario)
-            .orElse(saved.getCreatorId());
-
-        notificacionService.emitirStreamIniciado(creatorUser, saved.getId());
+        // Emitir notificación usando SIEMPRE el userId del creador
+        notificacionService.emitirStreamIniciado(saved.getCreatorId(), saved.getId());
         return saved;
     }
     

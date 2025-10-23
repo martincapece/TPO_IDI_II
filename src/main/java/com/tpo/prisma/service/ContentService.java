@@ -80,11 +80,8 @@ public class ContentService {
             }
         }
 
-        String creatorUser = userRepository.findById(saved.getCreatorId())
-        .map(u -> u.getNombreUsuario()) 
-        .orElse(saved.getCreatorId());
-
-        notificacionService.emitirContenidoPublicado(creatorUser, saved.getId());
+        // Emitir notificación usando SIEMPRE el userId del creador
+        notificacionService.emitirContenidoPublicado(saved.getCreatorId(), saved.getId());
         return saved;
     }
 

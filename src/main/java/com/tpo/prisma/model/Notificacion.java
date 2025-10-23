@@ -2,6 +2,7 @@ package com.tpo.prisma.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.Date;
 
 @Document(collection = "Notificacion")
 public class Notificacion {
@@ -12,6 +13,7 @@ public class Notificacion {
     private String mensaje;
     private String contentId;
     private String creatorUser;
+    private Date createdAt;
 
     public Notificacion() {} 
     public Notificacion(String mensaje, String contentId, String creatorUser) {
@@ -50,5 +52,13 @@ public class Notificacion {
 
     public void setCreatorUser(String creatorUser) {
         this.creatorUser = creatorUser;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 }
