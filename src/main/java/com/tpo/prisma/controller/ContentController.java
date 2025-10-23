@@ -30,7 +30,6 @@ public class ContentController {
             @RequestBody Content content, 
             HttpSession session) {
         
-        // Obtener el creatorId de la sesión
         String creatorId = (String) session.getAttribute("userId");
         content.setCreatorId(creatorId);
         
