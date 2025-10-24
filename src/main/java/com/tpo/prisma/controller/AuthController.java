@@ -83,7 +83,6 @@ public class AuthController {
             boolean deleted = authService.deleteUser(userId);
             
             if (deleted) {
-                // Si el usuario eliminado es el que está logueado, cerrar la sesión
                 String currentUserId = (String) session.getAttribute("userId");
                 if (userId.equals(currentUserId)) {
                     session.invalidate();

@@ -42,9 +42,6 @@ public class RedisConfig {
         config.setUsername(username);
         config.setPassword(password);
 
-        // Configuración de Sharding Explícito: N=3, R=1, W=1
-        // N = 3 (Redis Cloud cluster con 3 shards)
-        // R = 1, W = 1 (configurado en servidor Redis Cloud)
         SocketOptions socketOptions = SocketOptions.builder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .keepAlive(true)
@@ -55,7 +52,7 @@ public class RedisConfig {
                 .build();
 
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-                .commandTimeout(Duration.ofSeconds(5))  // Timeout para operaciones R/W
+                .commandTimeout(Duration.ofSeconds(5))
                 .shutdownTimeout(Duration.ofMillis(100))
                 .clientOptions(clientOptions)
                 .build();

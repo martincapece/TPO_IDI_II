@@ -41,16 +41,12 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     public MongoClient mongoClient() {
         ConnectionString connectionString = new ConnectionString(mongoUri);
         
-        // Configuración de Sharding Explícito: N=3, R=1, W=2
         MongoClientSettings settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
-                // N = 3 (réplicas en cluster Atlas)
-                // R = 1 (leer del nodo más cercano para baja latencia)
                 .readPreference(ReadPreference.nearest())
-                // W = 2 (escribir en 2 nodos antes de confirmar - alta consistencia)
                 .writeConcern(WriteConcern.W2
-                        .withJournal(true)  // Persiste en journal para durabilidad
-                        .withWTimeout(5000, TimeUnit.MILLISECONDS))  // Timeout de 5s
+                        .withJournal(true)
+                        .withWTimeout(5000, TimeUnit.MILLISECONDS))
                 .build();
         
         return MongoClients.create(settings);

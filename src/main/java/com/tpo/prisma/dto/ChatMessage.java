@@ -21,7 +21,6 @@ public class ChatMessage {
         this.timestamp = LocalDateTime.now();
     }
 
-    // Getters y Setters
     public String getUserId() {
         return userId;
     }

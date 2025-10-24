@@ -16,9 +16,6 @@ public class NotificacionController {
     @Autowired
     private NotificacionService notificacionService;
 
-    /**
-     * Lista las notificaciones del usuario autenticado.
-     */
     @GetMapping("/feed")
     public ResponseEntity<List<Notificacion>> feed(@AuthenticationPrincipal String userId,
                                                    @RequestParam(defaultValue = "0") int page,

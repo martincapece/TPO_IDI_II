@@ -46,7 +46,6 @@ public class GrafoService {
     public void vio(String usuarioId, String contenidoId) { 
         grafoRepository.registrarVista(usuarioId, contenidoId);
         
-        // Actualizar estadísticas regionales en MongoDB
         Optional<Usuario> usuarioOpt = userRepository.findById(usuarioId);
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();

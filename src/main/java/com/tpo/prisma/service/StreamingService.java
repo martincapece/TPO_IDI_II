@@ -26,10 +26,6 @@ public class StreamingService {
     @Autowired
     private DonacionService donacionService;
 
-    // Ya no necesitamos el repositorio de usuario para notificaciones
-    // @Autowired
-    // private UserRepository userRepository; 
-
     @Autowired
     private NotificacionService notificacionService;
     
@@ -68,7 +64,6 @@ public class StreamingService {
             }
         }
 
-        // Emitir notificación usando SIEMPRE el userId del creador
         notificacionService.emitirStreamIniciado(saved.getCreatorId(), saved.getId());
         return saved;
     }

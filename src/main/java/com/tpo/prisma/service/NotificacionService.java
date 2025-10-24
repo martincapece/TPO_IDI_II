@@ -16,13 +16,11 @@ public class NotificacionService {
     @Autowired private NotificacionRepository notiRepo;
     @Autowired private GrafoService grafoService;
     @Autowired private UserRepository userRepository;
-    // @Autowired private MongoTemplate mongoTemplate; // No usado actualmente
 
     public void emitirContenidoPublicado(String creatorUserId, String contenidoId) {
-        // Buscar el nombre del usuario
         String nombreUsuario = userRepository.findById(creatorUserId)
                 .map(u -> u.getNombreUsuario())
-                .orElse(creatorUserId); // Fallback al ID si no se encuentra
+                .orElse(creatorUserId);
         
         Notificacion n = new Notificacion();
         n.setCreatorUser(creatorUserId);
@@ -33,10 +31,9 @@ public class NotificacionService {
     }
 
     public void emitirStreamIniciado(String creatorUserId, String streamId) {
-        // Buscar el nombre del usuario
         String nombreUsuario = userRepository.findById(creatorUserId)
                 .map(u -> u.getNombreUsuario())
-                .orElse(creatorUserId); // Fallback al ID si no se encuentra
+                .orElse(creatorUserId);
         
         Notificacion n = new Notificacion();
         n.setCreatorUser(creatorUserId);
@@ -47,7 +44,6 @@ public class NotificacionService {
     }
     
     public List<Notificacion> feedParaUsuario(String userId, int page, int size) {
-        // Usuarios a los que sigue el usuario actual (ids de usuario)
         List<String> seguidos = grafoService.seguidores(userId);
         if (seguidos == null || seguidos.isEmpty()) {
             return List.of();
