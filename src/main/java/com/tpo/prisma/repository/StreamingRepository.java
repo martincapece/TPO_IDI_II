@@ -15,7 +15,7 @@ public interface StreamingRepository extends MongoRepository<Streaming, String> 
     @Query("{ 'enVivo': true, 'horaFinalizado': null }")
     List<Streaming> findByEnVivo();
     
-    @Query("{ 'enVivo': true, 'region': ?0 }")
+    @Query("{ 'enVivo': true, 'region': { $regex: ?0, $options: 'i' } }")
     List<Streaming> findLiveByRegion(String region);
     
     @Query("{ 'enVivo': true, 'categoria': { $in: ?0 } }")

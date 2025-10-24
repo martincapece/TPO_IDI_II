@@ -68,9 +68,7 @@ public class AuthController {
         
         try {
             Usuario usuario = authService.getUserById(userId);
-            
-            usuario.setContrasena(null);
-            
+
             return ResponseEntity.ok(usuario);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();

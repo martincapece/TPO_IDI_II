@@ -109,8 +109,8 @@ public class StreamingController {
         return ResponseEntity.ok(streamingService.getStreamingsEnVivoPorCategoria(categorias));
     }
 
-    @GetMapping("/region/{region}")
-    public ResponseEntity<List<Streaming>> getStreamingsenVivoByRegion(@PathVariable String region) {
+    @GetMapping("/region")
+    public ResponseEntity<List<Streaming>> getStreamingsenVivoByRegion(@RequestParam String region) {
         return ResponseEntity.ok(streamingService.getStreamingsenVivoByRegion(region));
     }
     

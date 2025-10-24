@@ -1,5 +1,6 @@
 package com.tpo.prisma.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,6 +18,7 @@ public class Usuario {
     
     private String mail;
     
+    @JsonIgnore
     private String contrasena;
     
     private Integer edad;
