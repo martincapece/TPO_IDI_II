@@ -43,7 +43,6 @@ public class StreamingService {
     private static final String TOP_VIEWERS_CACHE_KEY = "streaming:top:viewers";
     private static final String REGIONAL_RANKING_PREFIX = "streaming:regional:";
     private static final long CACHE_TTL = 1;
-    // private static final long RANKING_CACHE_TTL = 5; // Reservado para futuros rankings
     
     private String viewersKey(String id) { return "streaming:%s:viewers".formatted(id); }
 
@@ -117,7 +116,7 @@ public class StreamingService {
     public Optional<Streaming> finalizarStreaming(String id, String userId) {
         return streamingRepository.findById(id).map(streaming -> {
             if (redisStr != null) {
-                    if (streaming.getCreatorId() == userId ) {
+                    if (streaming.getCreatorId().equals(userId)) {
                         Long last = redisStr.opsForSet().size(viewersKey(id));
                         if (last != null) {
                             var stats = streaming.getEstadisticasVivo();

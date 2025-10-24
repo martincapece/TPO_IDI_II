@@ -30,7 +30,6 @@ public class StreamingController {
             @RequestBody Streaming streaming, 
             HttpSession session) {
         
-        // Obtener el creatorId de la sesión
         String creatorId = (String) session.getAttribute("userId");
         streaming.setCreatorId(creatorId);
         
@@ -66,8 +65,9 @@ public class StreamingController {
                     if (streaming.getChatId() != null && !streaming.getChatId().isEmpty()) {
                         streamingChatService.setExpirationOnStreamEnd(streaming.getChatId());
                     }
-                    return ResponseEntity.ok(streaming);
+                    return streaming;
                 })
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
