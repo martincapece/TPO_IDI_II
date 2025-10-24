@@ -44,13 +44,11 @@ public class ContentService {
     private static final long CACHE_TTL = 10;
 
     public Content createContent(Content content) {
-        // Auto-inicializar campos del servidor
         content.setPublishedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
         content.setCantMeGusta(0);
         content.setDuracion(0);
         
-        // Inicializar estadísticas regionales como mapa vacío
         if (content.getEstadisticasRegionales() == null) {
             content.setEstadisticasRegionales(new java.util.HashMap<>());
         }
@@ -79,7 +77,6 @@ public class ContentService {
             }
         }
 
-        // Emitir notificación usando SIEMPRE el userId del creador
         notificacionService.emitirContenidoPublicado(saved.getCreatorId(), saved.getId());
         return saved;
     }
@@ -136,7 +133,6 @@ public class ContentService {
                 return cached;
             }
 
-            // Obtener todos los contenidos y ordenarlos por cantVistas (campo calculado)
             List<Content> views = contentRepository.findAll().stream()
                     .sorted((c1, c2) -> Integer.compare(c2.getCantVistas(), c1.getCantVistas()))
                     .limit(20)
@@ -149,7 +145,6 @@ public class ContentService {
             return views;
         }
         
-        // Obtener todos los contenidos y ordenarlos por cantVistas (campo calculado)
         return contentRepository.findAll().stream()
                 .sorted((c1, c2) -> Integer.compare(c2.getCantVistas(), c1.getCantVistas()))
                 .limit(20)
@@ -158,12 +153,10 @@ public class ContentService {
 
     public void incrementLikes(String contentId, String usuarioId) {
         if (!grafoService.existeMeGusta(usuarioId, contentId)) {
-            // Verificar que el contenido existe
             if (!contentRepository.existsById(contentId)) {
                 throw new RuntimeException("Contenido no encontrado");
             }
             
-            // Actualización atómica que solo modifica cantMeGusta y updatedAt
             contentRepository.incrementLikesById(contentId, LocalDateTime.now());
             
             if (redisTemplate != null) {
@@ -178,12 +171,10 @@ public class ContentService {
 
     public void decrementLikes(String contentId, String usuarioId) {
         if (grafoService.existeMeGusta(usuarioId, contentId)) {
-            // Verificar que el contenido existe
             if (!contentRepository.existsById(contentId)) {
                 throw new RuntimeException("Contenido no encontrado");
             }
             
-            // Actualización atómica que solo modifica cantMeGusta y updatedAt
             contentRepository.decrementLikesById(contentId, LocalDateTime.now());
             
             if (redisTemplate != null) {
@@ -261,17 +252,13 @@ public class ContentService {
 
     public boolean deleteContent(String id) {
         if (contentRepository.existsById(id)) {
-            // Eliminar de MongoDB
             contentRepository.deleteById(id);
             
-            // Eliminar de Neo4j (contenido y todas sus relaciones)
             grafoService.eliminarContenido(id);
             
-            // Limpiar caché de Redis
             if (redisTemplate != null) {
                 redisTemplate.delete(LIKED_CACHE_KEY);
                 redisTemplate.delete(VIEWS_CACHE_KEY);
-                // Intentar limpiar caché regional si existe
                 try {
                     Optional<Content> contentOpt = contentRepository.findById(id);
                     if (contentOpt.isPresent() && contentOpt.get().getEstadisticasRegionales() != null 
@@ -280,7 +267,6 @@ public class ContentService {
                         redisTemplate.delete(REGIONAL_RANKING_PREFIX + region);
                     }
                 } catch (Exception e) {
-                    // Si falla la limpieza de caché regional, no es crítico
                 }
             }
             

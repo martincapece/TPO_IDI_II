@@ -31,11 +31,7 @@ public class Neo4jConfig {
 
     @Bean
     public Driver neo4jDriver() {
-        // Configuración de Sharding Explícito: N=3, R=1, W=1
         Config config = Config.builder()
-                // N = 3 (cluster configurado en Neo4j Aura)
-                // R = 1 (routing policy: leer de cualquier réplica disponible)
-                // W = 1 (escribe en 1 nodo líder, replica asíncronamente)
                 .withMaxConnectionLifetime(1, TimeUnit.HOURS)
                 .withMaxConnectionPoolSize(50)
                 .withConnectionAcquisitionTimeout(60, TimeUnit.SECONDS)

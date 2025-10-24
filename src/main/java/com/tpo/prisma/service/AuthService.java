@@ -97,10 +97,8 @@ public class AuthService {
     
     public boolean deleteUser(String userId) {
         if (userRepository.existsById(userId)) {
-            // Eliminar de MongoDB
             userRepository.deleteById(userId);
             
-            // Eliminar de Neo4j (usuario y todas sus relaciones: SIGUE, INTERESADO_EN, VIO, LE_GUSTO)
             try {
                 grafoService.eliminarUsuario(userId);
             } catch (Exception e) {
