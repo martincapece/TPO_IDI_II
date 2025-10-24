@@ -47,7 +47,6 @@ public class ContentService {
         // Auto-inicializar campos del servidor
         content.setPublishedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
-        content.setChatId(java.util.UUID.randomUUID().toString());
         content.setCantMeGusta(0);
         content.setDuracion(0);
         
@@ -150,16 +149,18 @@ public class ContentService {
 
     public void incrementLikes(String contentId, String usuarioId) {
         if (!grafoService.existeMeGusta(usuarioId, contentId)) {
-            Optional<Content> contentOpt = contentRepository.findById(contentId);
-            contentOpt.ifPresent(content -> {
-                content.setCantMeGusta(content.getCantMeGusta() + 1);
-                content.setUpdatedAt(LocalDateTime.now());
-                contentRepository.save(content);
-                
-                if (redisTemplate != null) {
-                    redisTemplate.delete(LIKED_CACHE_KEY);  
-                }
-            });
+            // Verificar que el contenido existe
+            if (!contentRepository.existsById(contentId)) {
+                throw new RuntimeException("Contenido no encontrado");
+            }
+            
+            // Actualización atómica que solo modifica cantMeGusta y updatedAt
+            contentRepository.incrementLikesById(contentId, LocalDateTime.now());
+            
+            if (redisTemplate != null) {
+                redisTemplate.delete(LIKED_CACHE_KEY);  
+            }
+            
             grafoService.meGusto(usuarioId, contentId);
         } else {
             throw new RuntimeException("El usuario ya ha dado me gusta a este contenido");
@@ -168,16 +169,18 @@ public class ContentService {
 
     public void decrementLikes(String contentId, String usuarioId) {
         if (grafoService.existeMeGusta(usuarioId, contentId)) {
-        Optional<Content> contentOpt = contentRepository.findById(contentId);
-        contentOpt.ifPresent(content -> {
-            content.setCantMeGusta(content.getCantMeGusta() - 1);
-            content.setUpdatedAt(LocalDateTime.now());
-            contentRepository.save(content);
+            // Verificar que el contenido existe
+            if (!contentRepository.existsById(contentId)) {
+                throw new RuntimeException("Contenido no encontrado");
+            }
+            
+            // Actualización atómica que solo modifica cantMeGusta y updatedAt
+            contentRepository.decrementLikesById(contentId, LocalDateTime.now());
             
             if (redisTemplate != null) {
                 redisTemplate.delete(LIKED_CACHE_KEY);  
             }
-            });
+            
             grafoService.quitarMeGusta(usuarioId, contentId);
         } else {
             throw new RuntimeException("El usuario no ha dado me gusta a este contenido");
@@ -249,12 +252,27 @@ public class ContentService {
 
     public boolean deleteContent(String id) {
         if (contentRepository.existsById(id)) {
+            // Eliminar de MongoDB
             contentRepository.deleteById(id);
             
+            // Eliminar de Neo4j (contenido y todas sus relaciones)
+            grafoService.eliminarContenido(id);
+            
+            // Limpiar caché de Redis
             if (redisTemplate != null) {
                 redisTemplate.delete(LIKED_CACHE_KEY);
                 redisTemplate.delete(VIEWS_CACHE_KEY);
-                redisTemplate.delete(REGIONAL_RANKING_PREFIX + contentRepository.findById(id).get().getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
+                // Intentar limpiar caché regional si existe
+                try {
+                    Optional<Content> contentOpt = contentRepository.findById(id);
+                    if (contentOpt.isPresent() && contentOpt.get().getEstadisticasRegionales() != null 
+                        && !contentOpt.get().getEstadisticasRegionales().isEmpty()) {
+                        String region = contentOpt.get().getEstadisticasRegionales().keySet().iterator().next().toLowerCase();
+                        redisTemplate.delete(REGIONAL_RANKING_PREFIX + region);
+                    }
+                } catch (Exception e) {
+                    // Si falla la limpieza de caché regional, no es crítico
+                }
             }
             
             return true;

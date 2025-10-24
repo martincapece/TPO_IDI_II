@@ -54,4 +54,10 @@ public class GrafoService {
 
     @Transactional("neo4jTransactionManager")
     public List<String> usuariosRecomendados(String usuarioId) { return grafoRepository.usuariosRecomendados(usuarioId); }
+    
+    @Transactional("neo4jTransactionManager")
+    public void eliminarUsuario(String usuarioId) { grafoRepository.eliminarUsuario(usuarioId); }
+    
+    @Transactional("neo4jTransactionManager")
+    public void eliminarContenido(String contenidoId) { grafoRepository.eliminarContenido(contenidoId); }
 }

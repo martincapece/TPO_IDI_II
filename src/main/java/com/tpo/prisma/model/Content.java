@@ -25,9 +25,6 @@ public class Content {
     private Integer duracion;
     
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String chatId;
-    
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Map<String, Integer> estadisticasRegionales;
     
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
@@ -103,14 +100,6 @@ public class Content {
 
     public void setDuracion(Integer duracion) {
         this.duracion = duracion;
-    }
-
-    public String getChatId() {
-        return chatId;
-    }
-
-    public void setChatId(String chatId) {
-        this.chatId = chatId;
     }
 
     public Map<String, Integer> getEstadisticasRegionales() {

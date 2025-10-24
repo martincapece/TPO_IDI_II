@@ -3,6 +3,7 @@ package com.tpo.prisma.repository;
 import com.tpo.prisma.model.Content;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
@@ -24,4 +25,12 @@ public interface ContentRepository extends MongoRepository<Content, String> {
 
     @Query(value = "{}", sort = "{ 'cantVistas': -1 }")
     List<Content> findTopByOrderByCantVistasDesc();
+    
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$inc': { 'cantMeGusta': 1 }, '$set': { 'updatedAt': ?1 } }")
+    void incrementLikesById(String id, java.time.LocalDateTime updatedAt);
+    
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$inc': { 'cantMeGusta': -1 }, '$set': { 'updatedAt': ?1 } }")
+    void decrementLikesById(String id, java.time.LocalDateTime updatedAt);
 }

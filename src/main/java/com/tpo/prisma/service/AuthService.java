@@ -94,4 +94,21 @@ public class AuthService {
         return userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
+    
+    public boolean deleteUser(String userId) {
+        if (userRepository.existsById(userId)) {
+            // Eliminar de MongoDB
+            userRepository.deleteById(userId);
+            
+            // Eliminar de Neo4j (usuario y todas sus relaciones: SIGUE, INTERESADO_EN, VIO, LE_GUSTO)
+            try {
+                grafoService.eliminarUsuario(userId);
+            } catch (Exception e) {
+                System.err.println("[Neo4j] Error eliminando usuario: " + e.getMessage());
+            }
+            
+            return true;
+        }
+        return false;
+    }
 }
