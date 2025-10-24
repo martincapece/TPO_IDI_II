@@ -28,8 +28,6 @@ public class Usuario {
     
     private List<String> intereses;
     
-    private List<Object> historial;
-
     private Direccion direccion;
 
     public Usuario() {
@@ -74,8 +72,7 @@ public class Usuario {
     public List<String> getIntereses() { return intereses; }
     public void setIntereses(List<String> intereses) { this.intereses = intereses; }
 
-    public List<Object> getHistorial() { return historial; }
-    public void setHistorial(List<Object> historial) { this.historial = historial; }
+    
 
     public Direccion getDireccion() { return direccion; }
     public void setDireccion(Direccion direccion) { this.direccion = direccion; }

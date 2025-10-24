@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 
 @Service
 public class AuthService {
@@ -50,8 +49,7 @@ public class AuthService {
         usuario.setEdad(request.getEdad());
         usuario.setIntereses(request.getIntereses());
         usuario.setDireccion(request.getDireccion());
-        usuario.setCantVideos(0);
-        usuario.setHistorial(new ArrayList<>());
+    usuario.setCantVideos(0);
         Usuario savedUser = userRepository.save(usuario);
         
         try {
