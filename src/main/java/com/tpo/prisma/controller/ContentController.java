@@ -179,11 +179,10 @@ public class ContentController {
     public ResponseEntity<Void> enterContent(
             @PathVariable String id,
             @RequestParam(required = false) String region,
-            @RequestParam(defaultValue = "1") int secciones,
             @AuthenticationPrincipal String userId
     ) {
 
-        contentService.enterContent(id, userId, region, secciones);
+        contentService.enterContent(id, userId, region);
         return ResponseEntity.ok().build();
     }
 }   

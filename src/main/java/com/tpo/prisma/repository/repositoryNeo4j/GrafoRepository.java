@@ -27,8 +27,8 @@ public interface GrafoRepository extends Neo4jRepository<UsuarioNode, String> {
     @Query("MATCH (u:Usuario {id:$usuarioId})-[r:INTERESADO_EN]->(c:Categoria {nombre:$categoria}) DELETE r")
     void eliminarInteres(@Param("usuarioId") String usuarioId, @Param("categoria") String categoria);
 
-    @Query("MATCH (u:Usuario {id:$usuarioId}), (c:Contenido {id:$contenidoId}) MERGE (u)-[r:VIO]->(c) ON CREATE SET r.timestamp = datetime(), r.secciones = $secciones ON MATCH SET r.timestamp = datetime(), r.secciones = $secciones")
-    void registrarVista(@Param("usuarioId") String usuarioId, @Param("contenidoId") String contenidoId, @Param("secciones") int secciones);
+    @Query("MATCH (u:Usuario {id:$usuarioId}), (c:Contenido {id:$contenidoId}) MERGE (u)-[r:VIO]->(c) ON CREATE SET r.timestamp = datetime() ON MATCH SET r.timestamp = datetime()")
+    void registrarVista(@Param("usuarioId") String usuarioId, @Param("contenidoId") String contenidoId);
 
     @Query("MATCH (u:Usuario {id:$usuarioId}), (c:Contenido {id:$contenidoId}) MERGE (u)-[r:LE_GUSTO]->(c) ON CREATE SET r.timestamp = datetime() ON MATCH SET r.timestamp = datetime()")
     void registrarMeGusta(@Param("usuarioId") String usuarioId, @Param("contenidoId") String contenidoId);

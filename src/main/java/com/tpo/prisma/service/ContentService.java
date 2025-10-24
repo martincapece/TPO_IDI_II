@@ -262,7 +262,7 @@ public class ContentService {
         return false;
     }
 
-    public void enterContent(String contentId, String usuarioId, String region, int secciones) {
+    public void enterContent(String contentId, String usuarioId, String region) {
 
         var q = new Query(Criteria.where("_id").is(contentId));
         var u = new org.springframework.data.mongodb.core.query.Update()
@@ -275,7 +275,7 @@ public class ContentService {
     
         mongoTemplate.updateFirst(q, u, Content.class);
     
-        grafoService.vio(usuarioId, contentId, Math.max(1, secciones));
+        grafoService.vio(usuarioId, contentId);
     
         if (redisTemplate != null) {
             redisTemplate.delete(VIEWS_CACHE_KEY);

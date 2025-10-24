@@ -32,7 +32,7 @@ public class GrafoService {
     public void eliminarInteres(String usuarioId, String categoria) { grafoRepository.eliminarInteres(usuarioId, categoria); }
 
     @Transactional("neo4jTransactionManager")
-    public void vio(String usuarioId, String contenidoId, int secciones) { grafoRepository.registrarVista(usuarioId, contenidoId, secciones); }
+    public void vio(String usuarioId, String contenidoId) { grafoRepository.registrarVista(usuarioId, contenidoId); }
 
     @Transactional("neo4jTransactionManager")
     public void meGusto(String usuarioId, String contenidoId) { grafoRepository.registrarMeGusta(usuarioId, contenidoId); }
