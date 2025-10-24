@@ -61,8 +61,8 @@ public class GrafoController {
     }
 
     @PostMapping("/vio")
-    public ResponseEntity<Map<String, String>> vio(@RequestParam String usuarioId, @RequestParam String contenidoId, @RequestParam(defaultValue = "1") int secciones) {
-        grafoService.vio(usuarioId, contenidoId, secciones);
+    public ResponseEntity<Map<String, String>> vio(@RequestParam String usuarioId, @RequestParam String contenidoId) {
+        grafoService.vio(usuarioId, contenidoId);
         return ResponseEntity.ok(Map.of("message", "Vista registrada"));
     }
 
