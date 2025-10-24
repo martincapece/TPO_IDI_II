@@ -47,7 +47,6 @@ public class ContentService {
         // Auto-inicializar campos del servidor
         content.setPublishedAt(LocalDateTime.now());
         content.setUpdatedAt(LocalDateTime.now());
-        content.setChatId(java.util.UUID.randomUUID().toString());
         content.setCantMeGusta(0);
         content.setDuracion(0);
         
