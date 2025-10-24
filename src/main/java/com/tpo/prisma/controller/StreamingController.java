@@ -119,8 +119,8 @@ public class StreamingController {
         return ResponseEntity.ok(streamingService.getTopLiveByEspectadores());
     }
 
-    @GetMapping("/top/region/{region}")
-    public ResponseEntity<List<Streaming>> getTopStreamingsByRegion(@PathVariable String region) {
+    @GetMapping("/top/region")
+    public ResponseEntity<List<Streaming>> getTopStreamingsByRegion(@RequestParam String region) {
         return ResponseEntity.ok(streamingService.getTopStreamingsByRegion(region));
     }
     

@@ -24,6 +24,6 @@ public interface StreamingRepository extends MongoRepository<Streaming, String> 
     @Query(value = "{ 'enVivo': true }", sort = "{ 'estadisticasVivo.espectadores': -1 }")
     List<Streaming> findTopLiveByEspectadores();
     
-    @Query(value = "{ 'enVivo': true, 'region': ?0 }", sort = "{ 'estadisticasVivo.espectadores': -1 }")
+    @Query(value = "{ 'enVivo': true, 'region': { $regex: ?0, $options: 'i' } }", sort = "{ 'estadisticasVivo.espectadores': -1 }")
     List<Streaming> findTopLiveByEspectadoresByRegion(String region);
 }
