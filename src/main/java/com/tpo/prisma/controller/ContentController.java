@@ -67,13 +67,11 @@ public class ContentController {
     }
 
     @GetMapping("/vistos")
-    public ResponseEntity<List<Content>> getViewsContents() {
+    public ResponseEntity<List<Content>> getViewsContents(@RequestParam(required = false) String region) {
+        if (region != null && !region.isEmpty()) {
+            return ResponseEntity.ok(contentService.getTopContentsByRegion(region));
+        }
         return ResponseEntity.ok(contentService.getViewsContents());
-    }
-
-    @GetMapping("/vistos/{region}")
-    public ResponseEntity<List<Content>> getTopContentsByRegion(@PathVariable String region) {
-        return ResponseEntity.ok(contentService.getTopContentsByRegion(region));
     }
 
     @PostMapping("/{id}/like")

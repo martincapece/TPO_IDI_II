@@ -136,7 +136,12 @@ public class ContentService {
                 return cached;
             }
 
-            List<Content> views = contentRepository.findTopByOrderByCantVistasDesc();
+            // Obtener todos los contenidos y ordenarlos por cantVistas (campo calculado)
+            List<Content> views = contentRepository.findAll().stream()
+                    .sorted((c1, c2) -> Integer.compare(c2.getCantVistas(), c1.getCantVistas()))
+                    .limit(20)
+                    .toList();
+            
             if (!views.isEmpty()) {
                 redisTemplate.opsForValue().set(VIEWS_CACHE_KEY, views, CACHE_TTL, TimeUnit.MINUTES);
             }
@@ -144,7 +149,11 @@ public class ContentService {
             return views;
         }
         
-        return contentRepository.findTopByOrderByCantVistasDesc();
+        // Obtener todos los contenidos y ordenarlos por cantVistas (campo calculado)
+        return contentRepository.findAll().stream()
+                .sorted((c1, c2) -> Integer.compare(c2.getCantVistas(), c1.getCantVistas()))
+                .limit(20)
+                .toList();
     }
 
     public void incrementLikes(String contentId, String usuarioId) {

@@ -22,9 +22,6 @@ public interface ContentRepository extends MongoRepository<Content, String> {
 
     @Query(value = "{}", sort = "{ 'cantMeGusta': -1 }")
     List<Content> findTopByOrderByCantMeGustaDesc();
-
-    @Query(value = "{}", sort = "{ 'cantVistas': -1 }")
-    List<Content> findTopByOrderByCantVistasDesc();
     
     @Query("{ '_id': ?0 }")
     @Update("{ '$inc': { 'cantMeGusta': 1 }, '$set': { 'updatedAt': ?1 } }")
