@@ -1,5 +1,6 @@
 package com.tpo.prisma.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -232,18 +233,22 @@ public class Streaming {
         this.estadisticasRegionales = estadisticasRegionales;
     }
 
+    @JsonIgnore
     public Integer getPicoEspectadores() {
         return estadisticasVivo != null ? estadisticasVivo.getPicoEspectadores() : 0;
     }
 
+    @JsonIgnore
     public Integer getPromedioEspectadores() {
         return estadisticasVivo != null ? estadisticasVivo.getPromedioEspectadores() : 0;
     }
 
+    @JsonIgnore
     public Integer getEspectadores() {
         return estadisticasVivo != null ? estadisticasVivo.getEspectadores() : 0;
     }
 
+    @JsonIgnore
     public Integer getCantDonaciones() {
         return estadisticasVivo != null ? estadisticasVivo.getCantDonaciones() : 0;
     }
