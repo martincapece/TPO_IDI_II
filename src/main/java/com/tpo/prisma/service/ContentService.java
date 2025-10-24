@@ -252,12 +252,27 @@ public class ContentService {
 
     public boolean deleteContent(String id) {
         if (contentRepository.existsById(id)) {
+            // Eliminar de MongoDB
             contentRepository.deleteById(id);
             
+            // Eliminar de Neo4j (contenido y todas sus relaciones)
+            grafoService.eliminarContenido(id);
+            
+            // Limpiar caché de Redis
             if (redisTemplate != null) {
                 redisTemplate.delete(LIKED_CACHE_KEY);
                 redisTemplate.delete(VIEWS_CACHE_KEY);
-                redisTemplate.delete(REGIONAL_RANKING_PREFIX + contentRepository.findById(id).get().getEstadisticasRegionales().keySet().iterator().next().toLowerCase());
+                // Intentar limpiar caché regional si existe
+                try {
+                    Optional<Content> contentOpt = contentRepository.findById(id);
+                    if (contentOpt.isPresent() && contentOpt.get().getEstadisticasRegionales() != null 
+                        && !contentOpt.get().getEstadisticasRegionales().isEmpty()) {
+                        String region = contentOpt.get().getEstadisticasRegionales().keySet().iterator().next().toLowerCase();
+                        redisTemplate.delete(REGIONAL_RANKING_PREFIX + region);
+                    }
+                } catch (Exception e) {
+                    // Si falla la limpieza de caché regional, no es crítico
+                }
             }
             
             return true;

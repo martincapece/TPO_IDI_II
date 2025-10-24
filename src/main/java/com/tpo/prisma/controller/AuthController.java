@@ -76,4 +76,31 @@ public class AuthController {
             return ResponseEntity.status(404).body(error);
         }
     }
+    
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable String userId, HttpSession session) {
+        try {
+            boolean deleted = authService.deleteUser(userId);
+            
+            if (deleted) {
+                // Si el usuario eliminado es el que está logueado, cerrar la sesión
+                String currentUserId = (String) session.getAttribute("userId");
+                if (userId.equals(currentUserId)) {
+                    session.invalidate();
+                }
+                
+                Map<String, String> response = new HashMap<>();
+                response.put("message", "Usuario eliminado exitosamente");
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "Usuario no encontrado");
+                return ResponseEntity.status(404).body(error);
+            }
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
+    }
 }

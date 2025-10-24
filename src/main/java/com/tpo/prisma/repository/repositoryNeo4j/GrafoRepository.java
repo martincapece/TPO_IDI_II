@@ -64,4 +64,12 @@ public interface GrafoRepository extends Neo4jRepository<UsuarioNode, String> {
            "AND u.id <> recomendado.id " +
            "RETURN DISTINCT recomendado.id AS id")
     List<String> usuariosRecomendados(@Param("usuarioId") String usuarioId);
+    
+    // Elimina un usuario y todas sus relaciones
+    @Query("MATCH (u:Usuario {id:$usuarioId}) DETACH DELETE u")
+    void eliminarUsuario(@Param("usuarioId") String usuarioId);
+    
+    // Elimina un contenido y todas sus relaciones
+    @Query("MATCH (c:Contenido {id:$contenidoId}) DETACH DELETE c")
+    void eliminarContenido(@Param("contenidoId") String contenidoId);
 }
