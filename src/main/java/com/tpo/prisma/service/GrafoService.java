@@ -1,18 +1,29 @@
 package com.tpo.prisma.service;
 
+import com.tpo.prisma.model.Usuario;
 import com.tpo.prisma.model.modelNeo4j.ContenidoNode;
+import com.tpo.prisma.repository.UserRepository;
 import com.tpo.prisma.repository.repositoryNeo4j.GrafoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class GrafoService {
 
     @Autowired
     private GrafoRepository grafoRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    @Lazy
+    private ContentService contentService;
 
     @Transactional("neo4jTransactionManager")
     public void syncUsuario(String id) { grafoRepository.mergeUsuario(id); }
@@ -32,7 +43,19 @@ public class GrafoService {
     public void eliminarInteres(String usuarioId, String categoria) { grafoRepository.eliminarInteres(usuarioId, categoria); }
 
     @Transactional("neo4jTransactionManager")
-    public void vio(String usuarioId, String contenidoId) { grafoRepository.registrarVista(usuarioId, contenidoId); }
+    public void vio(String usuarioId, String contenidoId) { 
+        grafoRepository.registrarVista(usuarioId, contenidoId);
+        
+        // Actualizar estadísticas regionales en MongoDB
+        Optional<Usuario> usuarioOpt = userRepository.findById(usuarioId);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            if (usuario.getDireccion() != null && usuario.getDireccion().getPais() != null) {
+                String region = usuario.getDireccion().getPais();
+                contentService.updateRegionalStats(contenidoId, region, 1);
+            }
+        }
+    }
 
     @Transactional("neo4jTransactionManager")
     public void meGusto(String usuarioId, String contenidoId) { grafoRepository.registrarMeGusta(usuarioId, contenidoId); }
